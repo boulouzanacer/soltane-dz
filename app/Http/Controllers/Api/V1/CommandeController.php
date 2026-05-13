@@ -85,12 +85,28 @@ class CommandeController extends Controller
                     $produitsById[$produit->id] = $produit;
                 }
 
+                $fraisLivraison = 0.0;
+                if ((int) ($frs->enable_frais_livraison ?? 0) === 1) {
+                    $f = DB::table('frais_livraison')
+                        ->where('id_frs', (int) $frs->id)
+                        ->where('id_wilaya', (int) $data['id_wilaya'])
+                        ->value('frais');
+                    if ($f !== null && (float) $f > 0) {
+                        $fraisLivraison = (float) $f;
+                    }
+                }
+
+                $sousTotalCmd = $montantTotal;
+                $montantTotal = $sousTotalCmd + $fraisLivraison;
+
                 $cmd1 = Cmd1::create([
                     'id_client' => $client->id,
                     'id_frs' => $frs->id,
                     'date_cmd' => now(),
                     'statut' => 'en_attente',
                     'montant_total' => $montantTotal,
+                    'sous_total' => $sousTotalCmd,
+                    'frais_livraison' => $fraisLivraison,
                     'adresse_livraison' => $data['adresse_livraison'],
                     'id_wilaya' => (int) $data['id_wilaya'],
                     'id_commune' => (int) $data['id_commune'],
@@ -136,6 +152,8 @@ class CommandeController extends Controller
                         'date_cmd' => (string) $cmd1->date_cmd,
                         'statut' => (string) $cmd1->statut,
                         'montant_total' => (float) $cmd1->montant_total,
+                        'sous_total' => (float) ($cmd1->sous_total ?? 0),
+                        'frais_livraison' => (float) ($cmd1->frais_livraison ?? 0),
                         'adresse_livraison' => $cmd1->adresse_livraison,
                         'id_wilaya' => (int) $cmd1->id_wilaya,
                         'id_commune' => (int) $cmd1->id_commune,
@@ -176,6 +194,8 @@ class CommandeController extends Controller
                 'date_cmd' => (string) $c->date_cmd,
                 'statut' => (string) $c->statut,
                 'montant_total' => (float) $c->montant_total,
+                'sous_total' => (float) ($c->sous_total ?? 0),
+                'frais_livraison' => (float) ($c->frais_livraison ?? 0),
                 'adresse_livraison' => $c->adresse_livraison,
                 'synced_pme' => (int) $c->synced_pme,
             ];
@@ -228,6 +248,8 @@ class CommandeController extends Controller
                 'date_cmd' => (string) $cmd->date_cmd,
                 'statut' => (string) $cmd->statut,
                 'montant_total' => (float) $cmd->montant_total,
+                'sous_total' => (float) ($cmd->sous_total ?? 0),
+                'frais_livraison' => (float) ($cmd->frais_livraison ?? 0),
                 'adresse_livraison' => $cmd->adresse_livraison,
                 'id_wilaya' => (int) $cmd->id_wilaya,
                 'id_commune' => (int) $cmd->id_commune,

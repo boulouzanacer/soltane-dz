@@ -8,6 +8,7 @@ use App\Http\Controllers\Fournisseur\ProduitController as FrsProduitController;
 use App\Http\Controllers\Fournisseur\CategorieController as FrsCategorieController;
 use App\Http\Controllers\Fournisseur\ClientController as FrsClientController;
 use App\Http\Controllers\Fournisseur\CommandeController as FrsCommandeController;
+use App\Http\Controllers\Fournisseur\FraisLivraisonController as FrsFraisLivraisonController;
 use App\Http\Controllers\Fournisseur\ProfileController as FrsProfileController;
 use App\Http\Controllers\StoreController;
 
@@ -67,6 +68,10 @@ Route::prefix('fournisseur')->middleware('auth.fournisseur')->group(function () 
     Route::get('/commandes', [FrsCommandeController::class, 'index']);
     Route::get('/commandes/{id}', [FrsCommandeController::class, 'show']);
     Route::put('/commandes/{id}/statut', [FrsCommandeController::class, 'updateStatut']);
+    Route::put('/commandes/{id}/lignes/{ligneId}', [FrsCommandeController::class, 'updateLigneQuantite']);
+
+    Route::get('/frais-livraison', [FrsFraisLivraisonController::class, 'index']);
+    Route::put('/frais-livraison', [FrsFraisLivraisonController::class, 'update']);
 
     Route::get('/profil', [FrsProfileController::class, 'edit']);
     Route::put('/profil', [FrsProfileController::class, 'update']);

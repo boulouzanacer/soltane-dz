@@ -198,4 +198,81 @@ class CommandeController extends Controller
 
         return back()->with('success', 'Statut mis à jour.');
     }
+
+    public function updateLigneQuantite(Request $request, int $id, int $ligneId): RedirectResponse
+    {
+        $frsId = (int) session('frs_id');
+
+        $data = $request->validate([
+            'quantite' => ['required', 'integer', 'min:1'],
+        ]);
+
+        $newQty = (int) $data['quantite'];
+
+        try {
+            DB::transaction(function () use ($frsId, $id, $ligneId, $newQty) {
+                $commande = Cmd1::query()
+                    ->where('id', $id)
+                    ->where('id_frs', $frsId)
+                    ->lockForUpdate()
+                    ->firstOrFail();
+
+                if ((string) $commande->statut === 'annulee') {
+                    throw new \InvalidArgumentException('Commande annulée');
+                }
+
+                $ligne = Cmd2::query()
+                    ->where('id', $ligneId)
+                    ->where('id_cmd', $commande->id)
+                    ->lockForUpdate()
+                    ->firstOrFail();
+
+                $oldQty = (int) $ligne->quantite;
+                if ($newQty === $oldQty) {
+                    return;
+                }
+
+                $diff = $newQty - $oldQty;
+
+                $produit = Produit::query()
+                    ->where('id', (int) $ligne->id_produit)
+                    ->where('id_frs', $frsId)
+                    ->lockForUpdate()
+                    ->first();
+
+                if (! $produit) {
+                    throw new \RuntimeException('Produit introuvable.');
+                }
+
+                if ($diff > 0) {
+                    if ((int) $produit->stock < $diff) {
+                        throw new \InvalidArgumentException('Stock insuffisant');
+                    }
+                    $produit->decrement('stock', $diff);
+                } elseif ($diff < 0) {
+                    $produit->increment('stock', abs($diff));
+                }
+
+                $prixUnitaire = (float) $ligne->prix_unitaire;
+                $ligne->update([
+                    'quantite' => $newQty,
+                    'sous_total' => $prixUnitaire * $newQty,
+                ]);
+
+                $sousTotal = (float) Cmd2::query()
+                    ->where('id_cmd', $commande->id)
+                    ->sum('sous_total');
+
+                $commande->update([
+                    'sous_total' => $sousTotal,
+                    'montant_total' => $sousTotal + (float) ($commande->frais_livraison ?? 0),
+                ]);
+            });
+        } catch (\InvalidArgumentException $e) {
+            $msg = $e->getMessage() === 'Commande annulée' ? 'Impossible de modifier: commande annulée.' : 'Stock insuffisant';
+            return back()->with('error', $msg);
+        }
+
+        return back()->with('success', 'Quantité mise à jour.');
+    }
 }

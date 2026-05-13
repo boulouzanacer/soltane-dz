@@ -33,6 +33,7 @@ class Fournisseur extends Authenticatable
         'actif',
         'is_visible',
         'show_prices_to_guests',
+        'enable_frais_livraison',
     ];
 
     protected $appends = [
@@ -114,6 +115,11 @@ class Fournisseur extends Authenticatable
     public function categories(): HasMany
     {
         return $this->hasMany(Categorie::class, 'id_frs', 'id');
+    }
+
+    public function fraisLivraison(): HasMany
+    {
+        return $this->hasMany(FraisLivraison::class, 'id_frs', 'id');
     }
 
     public function cmd1(): HasMany

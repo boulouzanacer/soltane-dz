@@ -78,9 +78,25 @@
 
             <div class="rounded-2xl border border-slate-200 bg-[var(--store-card)] p-6">
                 <div class="text-lg font-extrabold tracking-wide">Total</div>
-                <div class="mt-3 flex items-center justify-between text-slate-600">
-                    <span>Montant total</span>
-                    <span class="font-extrabold text-slate-900">{{ number_format((float)$commande->montant_total, 2, '.', ' ') }} DA</span>
+                @php
+                    $sousTotal = isset($commande->sous_total) ? (float) $commande->sous_total : (float) $lignes->sum('sous_total');
+                    $frais = (float) ($commande->frais_livraison ?? 0);
+                @endphp
+                <div class="mt-3 space-y-2">
+                    <div class="flex items-center justify-between text-slate-600">
+                        <span>Sous-total</span>
+                        <span class="font-extrabold text-slate-900">{{ number_format($sousTotal, 2, '.', ' ') }} DA</span>
+                    </div>
+                    @if($frais > 0)
+                        <div class="flex items-center justify-between text-slate-600">
+                            <span>Frais de livraison</span>
+                            <span class="font-extrabold text-slate-900">{{ number_format($frais, 2, '.', ' ') }} DA</span>
+                        </div>
+                    @endif
+                    <div class="flex items-center justify-between text-slate-600">
+                        <span>Total</span>
+                        <span class="font-extrabold text-slate-900">{{ number_format((float)$commande->montant_total, 2, '.', ' ') }} DA</span>
+                    </div>
                 </div>
             </div>
         </div>

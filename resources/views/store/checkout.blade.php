@@ -104,9 +104,23 @@
                 @endforeach
             </div>
 
-            <div class="mt-4 pt-4 border-t border-slate-200 flex items-center justify-between">
-                <span class="text-slate-600">Total</span>
-                <span class="font-extrabold text-slate-900">{{ number_format((float)$total, 2, '.', ' ') }} DA</span>
+            <div class="mt-4 pt-4 border-t border-slate-200 space-y-2">
+                <div class="flex items-center justify-between text-slate-600">
+                    <span>Sous-total</span>
+                    <span class="font-extrabold text-slate-900" id="subtotalEl">{{ number_format((float)$total, 2, '.', ' ') }} DA</span>
+                </div>
+
+                @if(($shipping_enabled ?? false))
+                    <div class="flex items-center justify-between text-slate-600">
+                        <span>Frais de livraison</span>
+                        <span class="font-extrabold text-slate-900" id="shippingFeeEl">{{ number_format((float)($shipping_fee ?? 0), 2, '.', ' ') }} DA</span>
+                    </div>
+                @endif
+
+                <div class="flex items-center justify-between">
+                    <span class="text-slate-600">Total</span>
+                    <span class="font-extrabold text-slate-900" id="totalEl">{{ number_format((float)($total_with_shipping ?? $total), 2, '.', ' ') }} DA</span>
+                </div>
             </div>
 
             <div class="mt-3 text-xs text-slate-500">
@@ -121,6 +135,12 @@
     const wilayaSelect = document.getElementById('wilayaSelect');
     const communeSelect = document.getElementById('communeSelect');
     if (!wilayaSelect || !communeSelect) return;
+
+    const shippingEnabled = @json((bool)($shipping_enabled ?? false));
+    const shippingFees = @json(($shipping_fees ?? []));
+    const subtotal = Number(@json((float)$total));
+    const shippingEl = document.getElementById('shippingFeeEl');
+    const totalEl = document.getElementById('totalEl');
 
     const setLoading = (loading) => {
         communeSelect.disabled = loading;
@@ -147,7 +167,19 @@
         const id = wilayaSelect.value;
         if (!id) return;
         loadCommunes(id);
+        if (shippingEnabled) {
+            const fee = Number(shippingFees[id] ?? 0);
+            if (shippingEl) shippingEl.textContent = fee.toLocaleString('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + ' DA';
+            if (totalEl) totalEl.textContent = (subtotal + fee).toLocaleString('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + ' DA';
+        }
     });
+
+    if (shippingEnabled) {
+        const id = wilayaSelect.value;
+        const fee = Number(shippingFees[id] ?? 0);
+        if (shippingEl) shippingEl.textContent = fee.toLocaleString('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + ' DA';
+        if (totalEl) totalEl.textContent = (subtotal + fee).toLocaleString('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + ' DA';
+    }
 })();
 </script>
 @endsection

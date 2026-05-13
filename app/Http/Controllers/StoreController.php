@@ -32,6 +32,30 @@ class StoreController extends Controller
         return $frs && (int) ($frs->show_prices_to_guests ?? 1) === 1;
     }
 
+    private function fraisLivraisonEnabled(?Fournisseur $frs): bool
+    {
+        return $frs && (int) ($frs->enable_frais_livraison ?? 0) === 1;
+    }
+
+    private function fraisLivraisonMap(int $frsId): array
+    {
+        return DB::table('frais_livraison')
+            ->where('id_frs', $frsId)
+            ->pluck('frais', 'id_wilaya')
+            ->map(fn ($v) => (float) $v)
+            ->all();
+    }
+
+    private function fraisLivraisonFor(int $frsId, int $idWilaya): float
+    {
+        $v = DB::table('frais_livraison')
+            ->where('id_frs', $frsId)
+            ->where('id_wilaya', $idWilaya)
+            ->value('frais');
+
+        return $v === null ? 0.0 : (float) $v;
+    }
+
     private function currentClient(): ?Client
     {
         if (session('role') !== 'client' || ! session()->has('client_id')) {
@@ -452,6 +476,8 @@ class StoreController extends Controller
             return redirect()->to('/panier')->with('error', 'Votre panier est vide.');
         }
 
+        $boutique = $this->singleFournisseur();
+
         $wilayas = Wilaya::query()->orderBy('ID_WILAYA')->get(['ID_WILAYA', 'WILAYA']);
         $selectedWilaya = (int) ($client->id_wilaya ?? 0);
         if ($selectedWilaya <= 0) {
@@ -463,15 +489,23 @@ class StoreController extends Controller
             ->orderBy('COMMUNE')
             ->get(['ID_COMMUNE', 'COMMUNE', 'ID_WILAYA']);
 
+        $shippingEnabled = $this->fraisLivraisonEnabled($boutique);
+        $feesMap = ($shippingEnabled && $boutique) ? $this->fraisLivraisonMap((int) $boutique->id) : [];
+        $shippingFee = ($shippingEnabled && $boutique) ? ($feesMap[$selectedWilaya] ?? 0.0) : 0.0;
+
         return view('store.checkout', [
             'title' => 'Finaliser la commande',
             'client' => $client,
             'items' => $summary['items'],
             'total' => $summary['total'],
-            'boutique' => $summary['frs'],
+            'boutique' => $boutique,
             'wilayas' => $wilayas,
             'communes' => $communes,
             'selected_wilaya' => $selectedWilaya,
+            'shipping_enabled' => $shippingEnabled,
+            'shipping_fees' => $feesMap,
+            'shipping_fee' => $shippingFee,
+            'total_with_shipping' => (float) $summary['total'] + $shippingFee,
         ]);
     }
 
@@ -511,7 +545,7 @@ class StoreController extends Controller
                 throw new \RuntimeException('Fournisseur introuvable.');
             }
 
-            $montantTotal = 0.0;
+            $sousTotal = 0.0;
             $lines = [];
 
             foreach ($summary['items'] as $it) {
@@ -541,7 +575,7 @@ class StoreController extends Controller
 
                 $prixUnitaire = (float) $pdb->prixUnitairePourQuantite($client, $qty);
                 $lineTotal = $prixUnitaire * $qty;
-                $montantTotal += $lineTotal;
+                $sousTotal += $lineTotal;
 
                 $lines[] = [
                     'id_produit' => (int) $pdb->id,
@@ -553,12 +587,27 @@ class StoreController extends Controller
                 $pdb->update(['stock' => (int) $pdb->stock - $qty]);
             }
 
+            $fraisLivraison = 0.0;
+            if ((int) ($frs->enable_frais_livraison ?? 0) === 1) {
+                $fraisLivraison = (float) DB::table('frais_livraison')
+                    ->where('id_frs', (int) $frs->id)
+                    ->where('id_wilaya', (int) $data['id_wilaya'])
+                    ->value('frais');
+                if ($fraisLivraison < 0) {
+                    $fraisLivraison = 0.0;
+                }
+            }
+
+            $montantTotal = $sousTotal + $fraisLivraison;
+
             $cmd = Cmd1::create([
                 'id_client' => (int) $client->id,
                 'id_frs' => (int) $frs->id,
                 'date_cmd' => Carbon::now(),
                 'statut' => 'en_attente',
                 'montant_total' => $montantTotal,
+                'sous_total' => $sousTotal,
+                'frais_livraison' => $fraisLivraison,
                 'adresse_livraison' => $data['adresse_livraison'],
                 'id_wilaya' => (int) $data['id_wilaya'],
                 'id_commune' => (int) $data['id_commune'],

@@ -83,7 +83,23 @@
                 <span class="text-xs font-bold px-2.5 py-1 rounded-full {{ (int)$commande->synced_pme === 1 ? 'bg-emerald-500/15 text-emerald-300 border border-emerald-400/20' : 'bg-amber-500/15 text-amber-300 border border-amber-400/20' }}">
                     {{ (int)$commande->synced_pme === 1 ? 'Synchronisé PME' : 'En attente sync' }}
                 </span>
+                @php
+                    $sousTotal = isset($commande->sous_total) ? (float) $commande->sous_total : (float) $lignes->sum('sous_total');
+                    $frais = (float) ($commande->frais_livraison ?? 0);
+                @endphp
                 <span class="text-sm font-extrabold">{{ number_format((float)$commande->montant_total, 2, '.', ' ') }}</span>
+            </div>
+            <div class="mt-3 space-y-1 text-xs text-white/70">
+                <div class="flex items-center justify-between">
+                    <span>Sous-total</span>
+                    <span class="font-extrabold">{{ number_format($sousTotal, 2, '.', ' ') }}</span>
+                </div>
+                @if($frais > 0)
+                    <div class="flex items-center justify-between">
+                        <span>Frais livraison</span>
+                        <span class="font-extrabold">{{ number_format($frais, 2, '.', ' ') }}</span>
+                    </div>
+                @endif
             </div>
 
             <form method="POST" action="{{ url('/fournisseur/commandes/'.$commande->id.'/statut') }}" class="mt-5">
@@ -131,13 +147,42 @@
                                 <div class="font-semibold">{{ $l->produit_designation ?? 'Produit' }}</div>
                                 <div class="text-xs text-white/60">{{ $l->produit_reference }}</div>
                             </td>
-                            <td class="py-3 px-4 text-right font-extrabold">{{ (int)$l->quantite }}</td>
+                            <td class="py-3 px-4 text-right">
+                                @if((string)$commande->statut !== 'annulee')
+                                    <form method="POST" action="{{ url('/fournisseur/commandes/'.$commande->id.'/lignes/'.$l->id) }}" class="flex items-center justify-end gap-2">
+                                        @csrf
+                                        @method('PUT')
+                                        <input type="number"
+                                               name="quantite"
+                                               min="1"
+                                               value="{{ (int)$l->quantite }}"
+                                               class="w-20 text-right rounded-xl border border-white/10 bg-black/20 px-3 py-2 outline-none focus:border-[var(--frs-primary)]">
+                                        <button type="submit"
+                                                class="rounded-xl px-3 py-2 text-xs font-extrabold text-white"
+                                                style="background: linear-gradient(135deg, var(--frs-primary), #0A3D7A);">
+                                            OK
+                                        </button>
+                                    </form>
+                                @else
+                                    <div class="font-extrabold">{{ (int)$l->quantite }}</div>
+                                @endif
+                            </td>
                             <td class="py-3 px-4 text-right font-extrabold">{{ number_format((float)$l->prix_unitaire, 2, '.', ' ') }}</td>
                             <td class="py-3 px-4 text-right font-extrabold">{{ number_format((float)$l->sous_total, 2, '.', ' ') }}</td>
                         </tr>
                     @endforeach
                 </tbody>
                 <tfoot>
+                    <tr class="border-t border-white/10">
+                        <td colspan="3" class="py-3 px-4 text-right font-extrabold">Sous-total</td>
+                        <td class="py-3 px-4 text-right font-extrabold">{{ number_format($sousTotal, 2, '.', ' ') }}</td>
+                    </tr>
+                    @if($frais > 0)
+                        <tr class="border-t border-white/10">
+                            <td colspan="3" class="py-3 px-4 text-right font-extrabold">Frais de livraison</td>
+                            <td class="py-3 px-4 text-right font-extrabold">{{ number_format($frais, 2, '.', ' ') }}</td>
+                        </tr>
+                    @endif
                     <tr class="border-t border-white/10">
                         <td colspan="3" class="py-4 px-4 text-right font-extrabold">Total</td>
                         <td class="py-4 px-4 text-right font-extrabold">{{ number_format((float)$commande->montant_total, 2, '.', ' ') }}</td>
