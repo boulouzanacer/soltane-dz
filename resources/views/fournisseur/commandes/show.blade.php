@@ -84,7 +84,11 @@
                     {{ (int)$commande->synced_pme === 1 ? 'Synchronisé PME' : 'En attente sync' }}
                 </span>
                 @php
-                    $sousTotal = isset($commande->sous_total) ? (float) $commande->sous_total : (float) $lignes->sum('sous_total');
+                    $sumLignes = (float) $lignes->sum('sous_total');
+                    $sousTotal = (float) ($commande->sous_total ?? 0);
+                    if ($sousTotal <= 0 && $sumLignes > 0) {
+                        $sousTotal = $sumLignes;
+                    }
                     $frais = (float) ($commande->frais_livraison ?? 0);
                 @endphp
                 <span class="text-sm font-extrabold">{{ number_format((float)$commande->montant_total, 2, '.', ' ') }}</span>

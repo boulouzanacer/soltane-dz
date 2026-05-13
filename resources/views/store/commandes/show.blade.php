@@ -79,7 +79,11 @@
             <div class="rounded-2xl border border-slate-200 bg-[var(--store-card)] p-6">
                 <div class="text-lg font-extrabold tracking-wide">Total</div>
                 @php
-                    $sousTotal = isset($commande->sous_total) ? (float) $commande->sous_total : (float) $lignes->sum('sous_total');
+                    $sumLignes = (float) $lignes->sum('sous_total');
+                    $sousTotal = (float) ($commande->sous_total ?? 0);
+                    if ($sousTotal <= 0 && $sumLignes > 0) {
+                        $sousTotal = $sumLignes;
+                    }
                     $frais = (float) ($commande->frais_livraison ?? 0);
                 @endphp
                 <div class="mt-3 space-y-2">

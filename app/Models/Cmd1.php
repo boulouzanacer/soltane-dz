@@ -20,6 +20,8 @@ class Cmd1 extends Model
         'id_frs',
         'date_cmd',
         'statut',
+        'sous_total',
+        'frais_livraison',
         'montant_total',
         'adresse_livraison',
         'id_wilaya',
