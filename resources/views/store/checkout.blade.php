@@ -115,6 +115,7 @@
                         <span>Frais de livraison</span>
                         <span class="font-extrabold text-slate-900" id="shippingFeeEl">{{ number_format((float)($shipping_fee ?? 0), 2, '.', ' ') }} DA</span>
                     </div>
+                    <div class="text-[11px] text-slate-500" id="shippingMotifEl"></div>
                 @endif
 
                 <div class="flex items-center justify-between">
@@ -140,6 +141,7 @@
     const shippingFees = @json(($shipping_fees ?? []));
     const subtotal = Number(@json((float)$total));
     const shippingEl = document.getElementById('shippingFeeEl');
+    const motifEl = document.getElementById('shippingMotifEl');
     const totalEl = document.getElementById('totalEl');
 
     const setLoading = (loading) => {
@@ -171,6 +173,8 @@
             const fee = Number(shippingFees[id] ?? 0);
             if (shippingEl) shippingEl.textContent = fee.toLocaleString('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + ' DA';
             if (totalEl) totalEl.textContent = (subtotal + fee).toLocaleString('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + ' DA';
+            const label = (wilayaSelect.selectedOptions && wilayaSelect.selectedOptions[0]) ? wilayaSelect.selectedOptions[0].textContent.trim() : id;
+            if (motifEl) motifEl.textContent = 'Motif: Livraison vers ' + label;
         }
     });
 
@@ -179,6 +183,8 @@
         const fee = Number(shippingFees[id] ?? 0);
         if (shippingEl) shippingEl.textContent = fee.toLocaleString('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + ' DA';
         if (totalEl) totalEl.textContent = (subtotal + fee).toLocaleString('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + ' DA';
+        const label = (wilayaSelect.selectedOptions && wilayaSelect.selectedOptions[0]) ? wilayaSelect.selectedOptions[0].textContent.trim() : id;
+        if (motifEl) motifEl.textContent = 'Motif: Livraison vers ' + label;
     }
 })();
 </script>

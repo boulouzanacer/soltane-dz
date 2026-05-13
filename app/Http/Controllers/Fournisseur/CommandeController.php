@@ -76,8 +76,11 @@ class CommandeController extends Controller
         $frsId = (int) session('frs_id');
 
         $commande = Cmd1::query()
-            ->where('id_frs', $frsId)
-            ->findOrFail($id);
+            ->leftJoin('wilaya', 'wilaya.ID_WILAYA', '=', 'cmd1.id_wilaya')
+            ->select(['cmd1.*', 'wilaya.WILAYA as wilaya_nom'])
+            ->where('cmd1.id_frs', $frsId)
+            ->where('cmd1.id', $id)
+            ->firstOrFail();
 
         $client = Client::query()->find($commande->id_client);
 

@@ -665,7 +665,8 @@ class StoreController extends Controller
 
         $commande = Cmd1::query()
             ->leftJoin('frs', 'frs.id', '=', 'cmd1.id_frs')
-            ->select(['cmd1.*', 'frs.nom_frs as frs_nom'])
+            ->leftJoin('wilaya', 'wilaya.ID_WILAYA', '=', 'cmd1.id_wilaya')
+            ->select(['cmd1.*', 'frs.nom_frs as frs_nom', 'wilaya.WILAYA as wilaya_nom'])
             ->where('cmd1.id_client', $client->id)
             ->where('cmd1.id', $id)
             ->firstOrFail();

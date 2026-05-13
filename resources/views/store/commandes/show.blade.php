@@ -96,6 +96,9 @@
                             <span>Frais de livraison</span>
                             <span class="font-extrabold text-slate-900">{{ number_format($frais, 2, '.', ' ') }} DA</span>
                         </div>
+                        <div class="text-[11px] text-slate-500">
+                            Motif: Livraison vers {{ (int)($commande->id_wilaya ?? 0) }} - {{ $commande->wilaya_nom ?? '—' }}
+                        </div>
                     @endif
                     <div class="flex items-center justify-between text-slate-600">
                         <span>Total</span>

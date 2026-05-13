@@ -103,6 +103,10 @@
                         <span>Frais livraison</span>
                         <span class="font-extrabold">{{ number_format($frais, 2, '.', ' ') }}</span>
                     </div>
+                    <div class="flex items-center justify-between">
+                        <span>Motif</span>
+                        <span class="font-extrabold">Wilaya {{ (int)($commande->id_wilaya ?? 0) }} - {{ $commande->wilaya_nom ?? '—' }}</span>
+                    </div>
                 @endif
             </div>
 
@@ -185,6 +189,10 @@
                         <tr class="border-t border-white/10">
                             <td colspan="3" class="py-3 px-4 text-right font-extrabold">Frais de livraison</td>
                             <td class="py-3 px-4 text-right font-extrabold">{{ number_format($frais, 2, '.', ' ') }}</td>
+                        </tr>
+                        <tr class="border-t border-white/10">
+                            <td colspan="3" class="py-3 px-4 text-right font-extrabold">Motif</td>
+                            <td class="py-3 px-4 text-right font-extrabold">Wilaya {{ (int)($commande->id_wilaya ?? 0) }} - {{ $commande->wilaya_nom ?? '—' }}</td>
                         </tr>
                     @endif
                     <tr class="border-t border-white/10">
