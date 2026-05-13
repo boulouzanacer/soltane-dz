@@ -57,7 +57,7 @@ class Produit extends Model
 
     public function prixPourClient(?Client $client): float
     {
-        if (! $client || (string) $client->type_client !== 'abonne') {
+        if (! $client) {
             return (float) $this->pv_1;
         }
 

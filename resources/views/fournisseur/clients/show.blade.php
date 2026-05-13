@@ -2,6 +2,26 @@
 
 @section('content')
 <div class="space-y-4">
+    @if(session('success'))
+        <div class="rounded-2xl border border-emerald-400/20 bg-emerald-500/10 px-4 py-3 text-emerald-200">
+            {{ session('success') }}
+        </div>
+    @endif
+    @if(session('error'))
+        <div class="rounded-2xl border border-red-400/20 bg-red-500/10 px-4 py-3 text-red-200">
+            {{ session('error') }}
+        </div>
+    @endif
+    @if($errors->any())
+        <div class="rounded-2xl border border-red-400/20 bg-red-500/10 px-4 py-3 text-red-200">
+            <ul class="list-disc pl-5 space-y-1 text-sm">
+                @foreach($errors->all() as $error)
+                    <li>{{ $error }}</li>
+                @endforeach
+            </ul>
+        </div>
+    @endif
+
     <div class="flex items-center justify-between">
         <div>
             <div class="text-2xl font-extrabold tracking-wide">{{ $client->prenom }} {{ $client->nom }}</div>
@@ -28,7 +48,21 @@
         </div>
         <div class="rounded-2xl border border-white/10 bg-[var(--frs-card)] p-5">
             <div class="text-sm text-white/60">Tarif</div>
-            <div class="font-extrabold mt-1">{{ (int)($client->tarif ?? 1) }}</div>
+            <form method="POST" action="{{ url('/fournisseur/clients/'.$client->id.'/tarif') }}" class="mt-2 flex items-center gap-2">
+                @csrf
+                @method('PUT')
+                <select name="tarif"
+                        class="w-full rounded-2xl border border-white/10 bg-black/20 px-4 py-3 outline-none focus:border-[var(--frs-primary)]">
+                    <option value="1" @selected((int)($client->tarif ?? 1) === 1)>1</option>
+                    <option value="2" @selected((int)($client->tarif ?? 1) === 2)>2</option>
+                    <option value="3" @selected((int)($client->tarif ?? 1) === 3)>3</option>
+                </select>
+                <button type="submit"
+                        class="rounded-2xl px-4 py-3 text-sm font-extrabold text-white"
+                        style="background: linear-gradient(135deg, var(--frs-primary), #0A3D7A);">
+                    Enregistrer
+                </button>
+            </form>
         </div>
     </div>
 

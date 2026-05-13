@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Client;
 use App\Models\Cmd1;
 use Illuminate\Contracts\View\View;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 
@@ -71,5 +72,23 @@ class ClientController extends Controller
             'client' => $client,
             'commandes' => $commandes,
         ]);
+    }
+
+    public function updateTarif(Request $request, int $id): RedirectResponse
+    {
+        $frsId = (int) session('frs_id');
+
+        $data = $request->validate([
+            'tarif' => ['required', 'integer', 'in:1,2,3'],
+        ]);
+
+        $client = Client::query()
+            ->where('id', $id)
+            ->where('id_frs', $frsId)
+            ->firstOrFail();
+
+        $client->update(['tarif' => (int) $data['tarif']]);
+
+        return back()->with('success', 'Tarif mis à jour.');
     }
 }

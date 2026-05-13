@@ -64,6 +64,7 @@ Route::prefix('fournisseur')->middleware('auth.fournisseur')->group(function () 
 
     Route::get('/clients', [FrsClientController::class, 'index']);
     Route::get('/clients/{id}', [FrsClientController::class, 'show']);
+    Route::put('/clients/{id}/tarif', [FrsClientController::class, 'updateTarif']);
 
     Route::get('/commandes', [FrsCommandeController::class, 'index']);
     Route::get('/commandes/{id}', [FrsCommandeController::class, 'show']);
