@@ -18,6 +18,11 @@
             {{ session('success') }}
         </div>
     @endif
+    @if(session('error'))
+        <div class="rounded-2xl border border-red-400/20 bg-red-500/10 px-4 py-3 text-red-200">
+            {{ session('error') }}
+        </div>
+    @endif
 
     <div class="grid grid-cols-1 xl:grid-cols-3 gap-4">
         <div class="xl:col-span-2 rounded-2xl border border-white/10 bg-[var(--frs-card)] p-5">
@@ -143,4 +148,3 @@
     </div>
 </div>
 @endsection
-

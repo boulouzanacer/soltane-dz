@@ -48,6 +48,11 @@
             {{ session('success') }}
         </div>
     @endif
+    @if(session('error'))
+        <div class="rounded-2xl border border-red-400/20 bg-red-500/10 px-4 py-3 text-red-200">
+            {{ session('error') }}
+        </div>
+    @endif
 
     <div class="rounded-2xl border border-white/10 bg-[var(--frs-card)] overflow-hidden">
         <div class="overflow-x-auto">
@@ -104,4 +109,3 @@
     </div>
 </div>
 @endsection
-
