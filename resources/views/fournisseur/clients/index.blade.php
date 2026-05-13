@@ -46,7 +46,7 @@
                         </tr>
                     @empty
                         <tr>
-                            <td colspan="6" class="py-10 text-center text-white/60">Aucun client abonné</td>
+                            <td colspan="6" class="py-10 text-center text-white/60">Aucun client</td>
                         </tr>
                     @endforelse
                 </tbody>
@@ -59,4 +59,3 @@
     </div>
 </div>
 @endsection
-
