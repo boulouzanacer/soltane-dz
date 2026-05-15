@@ -42,28 +42,6 @@
                 </div>
 
                 <div class="md:col-span-2">
-                    <label class="block text-sm font-semibold text-white/70 mb-1">Logo (optionnel)</label>
-                    <input type="file"
-                           name="logo"
-                           accept="image/png,image/jpeg,image/webp"
-                           class="w-full rounded-2xl border border-white/10 bg-black/20 px-4 py-3 outline-none focus:border-[var(--frs-primary)]">
-                    @if(($frs->logo_path ?? null))
-                        <div class="mt-2 flex items-center gap-3">
-                            <img src="{{ \Illuminate\Support\Facades\Storage::url($frs->logo_path) }}"
-                                 alt=""
-                                 class="h-14 w-14 rounded-2xl object-cover border border-white/10">
-                            <label class="flex items-center gap-2 cursor-pointer select-none">
-                                <input type="checkbox"
-                                       name="remove_logo"
-                                       value="1"
-                                       class="h-5 w-5 rounded border-white/20 bg-black/20">
-                                <span class="text-sm font-semibold text-white/70">Supprimer</span>
-                            </label>
-                        </div>
-                    @endif
-                </div>
-
-                <div class="md:col-span-2">
                     <label class="block text-sm font-semibold text-white/70 mb-1">Adresse</label>
                     <textarea name="adresse"
                               rows="3"
@@ -102,39 +80,6 @@
                             Ouvrir sur Maps
                         </a>
                     @endif
-                </div>
-
-                <div class="md:col-span-2">
-                    <label class="flex items-center gap-3 cursor-pointer select-none">
-                        <input type="checkbox"
-                               name="show_prices_to_guests"
-                               value="1"
-                               class="h-5 w-5 rounded border-white/20 bg-black/20"
-                               @checked((int)old('show_prices_to_guests', $frs->show_prices_to_guests ?? 1) === 1)>
-                        <span class="text-sm font-semibold text-white/70">Afficher les prix aux invités (non connectés)</span>
-                    </label>
-                </div>
-
-                <div class="md:col-span-2 pt-2">
-                    <div class="text-sm font-extrabold tracking-wide text-white/80">Pixels</div>
-                    <div class="text-xs text-white/60 mt-1">Meta Pixel et TikTok Pixel pour le suivi.</div>
-                </div>
-
-                <div>
-                    <label class="block text-sm font-semibold text-white/70 mb-1">Meta Pixel ID</label>
-                    <input name="meta_pixel_id"
-                           value="{{ old('meta_pixel_id', $frs->meta_pixel_id ?? '') }}"
-                           inputmode="numeric"
-                           class="w-full rounded-2xl border border-white/10 bg-black/20 px-4 py-3 outline-none focus:border-[var(--frs-primary)]"
-                           placeholder="ex: 123456789012345">
-                </div>
-
-                <div>
-                    <label class="block text-sm font-semibold text-white/70 mb-1">TikTok Pixel ID</label>
-                    <input name="tiktok_pixel_id"
-                           value="{{ old('tiktok_pixel_id', $frs->tiktok_pixel_id ?? '') }}"
-                           class="w-full rounded-2xl border border-white/10 bg-black/20 px-4 py-3 outline-none focus:border-[var(--frs-primary)]"
-                           placeholder="ex: C3ABCDEFG12345">
                 </div>
 
                 <div>

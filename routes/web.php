@@ -10,6 +10,8 @@ use App\Http\Controllers\Fournisseur\ClientController as FrsClientController;
 use App\Http\Controllers\Fournisseur\CommandeController as FrsCommandeController;
 use App\Http\Controllers\Fournisseur\FraisLivraisonController as FrsFraisLivraisonController;
 use App\Http\Controllers\Fournisseur\ProfileController as FrsProfileController;
+use App\Http\Controllers\Fournisseur\SiteSettingsController as FrsSiteSettingsController;
+use App\Http\Controllers\Fournisseur\UtilisateurController as FrsUtilisateurController;
 use App\Http\Controllers\StoreController;
 
 Route::get('/', [StoreController::class, 'index']);
@@ -79,4 +81,20 @@ Route::prefix('fournisseur')->middleware('auth.fournisseur')->group(function () 
     Route::put('/profil/password', [FrsProfileController::class, 'updatePassword']);
 
     Route::get('/wilayas/{idWilaya}/communes', [FrsProfileController::class, 'communes']);
+
+    Route::middleware('auth.admin')->group(function () {
+        Route::get('/parametres-site', [FrsSiteSettingsController::class, 'edit']);
+        Route::put('/parametres-site', [FrsSiteSettingsController::class, 'update']);
+
+        Route::get('/utilisateurs', [FrsUtilisateurController::class, 'index']);
+        Route::get('/utilisateurs/create', [FrsUtilisateurController::class, 'create']);
+        Route::post('/utilisateurs', [FrsUtilisateurController::class, 'store']);
+        Route::get('/utilisateurs/{id}', [FrsUtilisateurController::class, 'show']);
+        Route::get('/utilisateurs/{id}/edit', [FrsUtilisateurController::class, 'edit']);
+        Route::put('/utilisateurs/{id}', [FrsUtilisateurController::class, 'update']);
+        Route::delete('/utilisateurs/{id}', [FrsUtilisateurController::class, 'destroy']);
+        Route::post('/utilisateurs/{id}/taches', [FrsUtilisateurController::class, 'storeTask']);
+        Route::put('/utilisateurs/{id}/taches/{taskId}', [FrsUtilisateurController::class, 'updateTask']);
+        Route::delete('/utilisateurs/{id}/taches/{taskId}', [FrsUtilisateurController::class, 'destroyTask']);
+    });
 });

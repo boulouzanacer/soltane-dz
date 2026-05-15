@@ -72,6 +72,7 @@
 <body class="min-h-screen text-slate-100"
       :class="dark ? 'bg-[var(--frs-bg)]' : 'bg-slate-100 text-slate-900'">
 @php($frs = \App\Models\Fournisseur::find(session('frs_id')))
+@php($isAdmin = (int) session('is_admin', 0) === 1 || (string) session('role', '') === 'fournisseur')
 <div class="flex min-h-screen">
     <aside class="fixed inset-y-0 left-0 w-[240px] border-r bg-[var(--frs-bg)]"
            :class="dark ? 'border-white/10' : 'border-slate-200'">
@@ -134,8 +135,24 @@
                class="flex items-center gap-3 rounded-xl px-4 py-3 {{ request()->is('fournisseur/profil') ? 'bg-white/10' : '' }}"
                :class="dark ? 'hover:bg-white/10' : 'hover:bg-slate-100'">
                 <i class="fa-solid fa-user w-5 text-[var(--frs-primary)]"></i>
-                <span>Mon Profil</span>
+                <span>Paramètres Fournisseur</span>
             </a>
+
+            @if($isAdmin)
+                <a href="{{ url('/fournisseur/parametres-site') }}"
+                   class="flex items-center gap-3 rounded-xl px-4 py-3 {{ request()->is('fournisseur/parametres-site') ? 'bg-white/10' : '' }}"
+                   :class="dark ? 'hover:bg-white/10' : 'hover:bg-slate-100'">
+                    <i class="fa-solid fa-sliders w-5 text-[var(--frs-primary)]"></i>
+                    <span>Paramètres Site Web</span>
+                </a>
+
+                <a href="{{ url('/fournisseur/utilisateurs') }}"
+                   class="flex items-center gap-3 rounded-xl px-4 py-3 {{ request()->is('fournisseur/utilisateurs*') ? 'bg-white/10' : '' }}"
+                   :class="dark ? 'hover:bg-white/10' : 'hover:bg-slate-100'">
+                    <i class="fa-solid fa-user-gear w-5 text-[var(--frs-primary)]"></i>
+                    <span>Gestion Utilisateurs</span>
+                </a>
+            @endif
 
             <form method="POST" action="{{ url('/fournisseur/logout') }}" class="pt-2">
                 @csrf
@@ -200,6 +217,13 @@
                            :class="dark ? '' : 'hover:bg-slate-100'">
                             Mon profil
                         </a>
+                        @if($isAdmin)
+                            <a href="{{ url('/fournisseur/parametres-site') }}"
+                               class="block px-4 py-3 text-sm hover:bg-white/10"
+                               :class="dark ? '' : 'hover:bg-slate-100'">
+                                Paramètres site
+                            </a>
+                        @endif
                         <form method="POST" action="{{ url('/fournisseur/logout') }}">
                             @csrf
                             <button type="submit"

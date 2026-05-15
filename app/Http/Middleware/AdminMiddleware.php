@@ -6,13 +6,14 @@ use Closure;
 use Illuminate\Http\Request;
 use Symfony\Component\HttpFoundation\Response;
 
-class FournisseurMiddleware
+class AdminMiddleware
 {
     public function handle(Request $request, Closure $next): Response
     {
-        $role = (string) $request->session()->get('role');
-        if (! in_array($role, ['fournisseur', 'frs_user'], true) || ! $request->session()->has('frs_id')) {
-            return redirect()->to('/fournisseur/login');
+        $role = (string) $request->session()->get('role', '');
+        $isAdmin = (int) $request->session()->get('is_admin', 0) === 1 || $role === 'fournisseur';
+        if (! $isAdmin) {
+            abort(403);
         }
 
         return $next($request);

@@ -12,7 +12,6 @@ use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
-use Illuminate\Support\Facades\Storage;
 
 class ProfileController extends Controller
 {
@@ -41,11 +40,6 @@ class ProfileController extends Controller
         $data = $request->validate([
             'nom_frs' => ['required', 'string', 'max:255'],
             'telephone' => ['nullable', 'string', 'max:255'],
-            'logo' => ['nullable', 'file', 'mimes:jpg,jpeg,png,webp', 'max:4096'],
-            'remove_logo' => ['nullable', 'boolean'],
-            'show_prices_to_guests' => ['nullable', 'boolean'],
-            'meta_pixel_id' => ['nullable', 'string', 'max:50', 'regex:/^[0-9]+$/'],
-            'tiktok_pixel_id' => ['nullable', 'string', 'max:50', 'regex:/^[0-9A-Za-z]+$/'],
             'adresse' => ['required', 'string'],
             'id_wilaya' => ['required', 'integer', 'exists:wilaya,ID_WILAYA'],
             'id_commune' => ['required', 'integer', 'exists:commune,ID_COMMUNE'],
@@ -56,9 +50,6 @@ class ProfileController extends Controller
         $payload = [
             'nom_frs' => $data['nom_frs'],
             'telephone' => $data['telephone'] ?? null,
-            'show_prices_to_guests' => (int) ($data['show_prices_to_guests'] ?? 0) === 1 ? 1 : 0,
-            'meta_pixel_id' => isset($data['meta_pixel_id']) && trim((string) $data['meta_pixel_id']) !== '' ? trim((string) $data['meta_pixel_id']) : null,
-            'tiktok_pixel_id' => isset($data['tiktok_pixel_id']) && trim((string) $data['tiktok_pixel_id']) !== '' ? trim((string) $data['tiktok_pixel_id']) : null,
             'adresse' => $data['adresse'],
             'id_wilaya' => (int) $data['id_wilaya'],
             'id_commune' => (int) $data['id_commune'],
@@ -66,29 +57,6 @@ class ProfileController extends Controller
             'longitude' => array_key_exists('longitude', $data) ? (float) $data['longitude'] : null,
             'is_visible' => 1,
         ];
-
-        if ((int) ($data['remove_logo'] ?? 0) === 1) {
-            if (! empty($frs->logo_path)) {
-                Storage::disk('public')->delete($frs->logo_path);
-            }
-            $payload['logo_path'] = null;
-        }
-
-        if ($request->hasFile('logo')) {
-            if (! empty($frs->logo_path)) {
-                Storage::disk('public')->delete($frs->logo_path);
-            }
-            $ext = strtolower((string) $request->file('logo')->getClientOriginalExtension());
-            if ($ext === '') {
-                $ext = 'jpg';
-            }
-            $path = $request->file('logo')->storeAs(
-                "frs/{$frs->id}",
-                'logo_'.now()->timestamp.'.'.$ext,
-                'public'
-            );
-            $payload['logo_path'] = $path;
-        }
 
         $frs->update($payload);
 
