@@ -1,6 +1,7 @@
 @extends('layouts.fournisseur')
 
 @section('content')
+@php($canEdit = (string)session('role', '') === 'fournisseur' || (int)session('is_admin', 0) === 1)
 <div class="space-y-4">
     <div class="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-3">
         <form method="GET" action="{{ url('/fournisseur/produits') }}" class="grid grid-cols-1 md:grid-cols-3 gap-3 w-full lg:w-auto">
@@ -36,12 +37,14 @@
             </div>
         </form>
 
-        <a href="{{ url('/fournisseur/produits/create') }}"
-           class="inline-flex items-center justify-center gap-2 rounded-2xl px-4 py-3 font-bold text-white"
-           style="background: linear-gradient(135deg, var(--frs-primary), #0A3D7A);">
-            <i class="fa-solid fa-plus"></i>
-            Nouveau produit
-        </a>
+        @if($canEdit)
+            <a href="{{ url('/fournisseur/produits/create') }}"
+               class="inline-flex items-center justify-center gap-2 rounded-2xl px-4 py-3 font-bold text-white"
+               style="background: linear-gradient(135deg, var(--frs-primary), #0A3D7A);">
+                <i class="fa-solid fa-plus"></i>
+                Nouveau produit
+            </a>
+        @endif
     </div>
 
     @if(session('success'))
@@ -95,31 +98,33 @@
                             <i class="fa-solid fa-eye"></i>
                         </a>
 
-                        <a href="{{ url('/fournisseur/produits/'.$p->id.'/edit') }}"
-                           class="h-8 w-8 inline-flex items-center justify-center rounded-xl text-xs font-bold border border-white/10 hover:bg-white/10"
-                           title="Modifier">
-                            <i class="fa-solid fa-pen-to-square"></i>
-                        </a>
+                        @if($canEdit)
+                            <a href="{{ url('/fournisseur/produits/'.$p->id.'/edit') }}"
+                               class="h-8 w-8 inline-flex items-center justify-center rounded-xl text-xs font-bold border border-white/10 hover:bg-white/10"
+                               title="Modifier">
+                                <i class="fa-solid fa-pen-to-square"></i>
+                            </a>
 
-                        <form method="POST" action="{{ url('/fournisseur/produits/'.$p->id.'/toggle-actif') }}">
-                            @csrf
-                            <button type="submit"
-                                    class="h-8 w-8 inline-flex items-center justify-center rounded-xl text-xs font-bold border border-white/10 hover:bg-white/10"
-                                    title="Activer/Désactiver">
-                                <i class="fa-solid {{ (int)$p->actif === 1 ? 'fa-toggle-on' : 'fa-toggle-off' }}"></i>
-                            </button>
-                        </form>
+                            <form method="POST" action="{{ url('/fournisseur/produits/'.$p->id.'/toggle-actif') }}">
+                                @csrf
+                                <button type="submit"
+                                        class="h-8 w-8 inline-flex items-center justify-center rounded-xl text-xs font-bold border border-white/10 hover:bg-white/10"
+                                        title="Activer/Désactiver">
+                                    <i class="fa-solid {{ (int)$p->actif === 1 ? 'fa-toggle-on' : 'fa-toggle-off' }}"></i>
+                                </button>
+                            </form>
 
-                        <form method="POST" action="{{ url('/fournisseur/produits/'.$p->id) }}">
-                            @csrf
-                            @method('DELETE')
-                            <button type="submit"
-                                    onclick="return confirm('Supprimer ce produit ?')"
-                                    class="h-8 w-8 inline-flex items-center justify-center rounded-xl text-xs font-bold border border-red-400/20 text-red-300 hover:bg-red-500/10"
-                                    title="Supprimer">
-                                <i class="fa-solid fa-trash"></i>
-                            </button>
-                        </form>
+                            <form method="POST" action="{{ url('/fournisseur/produits/'.$p->id) }}">
+                                @csrf
+                                @method('DELETE')
+                                <button type="submit"
+                                        onclick="return confirm('Supprimer ce produit ?')"
+                                        class="h-8 w-8 inline-flex items-center justify-center rounded-xl text-xs font-bold border border-red-400/20 text-red-300 hover:bg-red-500/10"
+                                        title="Supprimer">
+                                    <i class="fa-solid fa-trash"></i>
+                                </button>
+                            </form>
+                        @endif
                     </div>
                 </div>
             </div>

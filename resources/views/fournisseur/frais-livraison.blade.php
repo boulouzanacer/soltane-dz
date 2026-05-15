@@ -1,7 +1,8 @@
 @extends('layouts.fournisseur')
 
 @section('content')
-<div class="space-y-4" x-data="{ enabled: @json($enabled) }">
+@php($canEdit = (string)session('role', '') === 'fournisseur' || (int)session('is_admin', 0) === 1)
+<div class="space-y-4" x-data="{ enabled: @json($enabled), canEdit: @json($canEdit) }">
     @if(session('success'))
         <div class="rounded-2xl border border-emerald-400/20 bg-emerald-500/10 px-4 py-3 text-emerald-200">
             {{ session('success') }}
@@ -32,18 +33,27 @@
                     <input type="hidden" name="enabled" :value="enabled ? 1 : 0">
                     <input type="checkbox"
                            class="sr-only peer"
-                           x-model="enabled">
+                           x-model="enabled"
+                           :disabled="!canEdit">
                     <div class="w-12 h-7 rounded-full bg-white/15 peer-checked:bg-[var(--frs-primary)] transition relative">
+                         :class="canEdit ? '' : 'opacity-60'"
+                    >
                         <div class="absolute left-1 top-1 h-5 w-5 rounded-full bg-white transition peer-checked:translate-x-5"></div>
                     </div>
                     <span class="text-sm font-extrabold text-white/80" x-text="enabled ? 'Activé' : 'Désactivé'"></span>
                 </label>
 
-                <button type="submit"
-                        class="rounded-2xl px-4 py-3 font-extrabold text-white"
-                        style="background: linear-gradient(135deg, var(--frs-primary), #0A3D7A);">
-                    Enregistrer
-                </button>
+                @if($canEdit)
+                    <button type="submit"
+                            class="rounded-2xl px-4 py-3 font-extrabold text-white"
+                            style="background: linear-gradient(135deg, var(--frs-primary), #0A3D7A);">
+                        Enregistrer
+                    </button>
+                @else
+                    <span class="text-xs font-bold px-2.5 py-1 rounded-full bg-white/10 border border-white/10 text-white/70">
+                        Lecture seule
+                    </span>
+                @endif
             </div>
         </div>
 
@@ -69,7 +79,8 @@
                                            step="0.01"
                                            min="0"
                                            value="{{ old('fees.'.$w->ID_WILAYA, $fee) }}"
-                                           class="w-40 text-right rounded-2xl border border-white/10 bg-black/20 px-4 py-2 outline-none focus:border-[var(--frs-primary)]">
+                                           class="w-40 text-right rounded-2xl border border-white/10 bg-black/20 px-4 py-2 outline-none focus:border-[var(--frs-primary)]"
+                                           {{ $canEdit ? '' : 'disabled' }}>
                                 </td>
                             </tr>
                         @endforeach
@@ -80,4 +91,3 @@
     </form>
 </div>
 @endsection
-

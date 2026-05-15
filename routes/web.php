@@ -56,13 +56,7 @@ Route::prefix('fournisseur')->middleware('auth.fournisseur')->group(function () 
     Route::delete('/categories/{id}', [FrsCategorieController::class, 'destroy']);
 
     Route::get('/produits', [FrsProduitController::class, 'index']);
-    Route::get('/produits/create', [FrsProduitController::class, 'create']);
-    Route::post('/produits', [FrsProduitController::class, 'store']);
     Route::get('/produits/{id}', [FrsProduitController::class, 'show']);
-    Route::get('/produits/{id}/edit', [FrsProduitController::class, 'edit']);
-    Route::put('/produits/{id}', [FrsProduitController::class, 'update']);
-    Route::delete('/produits/{id}', [FrsProduitController::class, 'destroy']);
-    Route::post('/produits/{id}/toggle-actif', [FrsProduitController::class, 'toggleActif']);
 
     Route::get('/clients', [FrsClientController::class, 'index']);
     Route::get('/clients/{id}', [FrsClientController::class, 'show']);
@@ -74,15 +68,23 @@ Route::prefix('fournisseur')->middleware('auth.fournisseur')->group(function () 
     Route::put('/commandes/{id}/lignes/{ligneId}', [FrsCommandeController::class, 'updateLigneQuantite']);
 
     Route::get('/frais-livraison', [FrsFraisLivraisonController::class, 'index']);
-    Route::put('/frais-livraison', [FrsFraisLivraisonController::class, 'update']);
-
-    Route::get('/profil', [FrsProfileController::class, 'edit']);
-    Route::put('/profil', [FrsProfileController::class, 'update']);
-    Route::put('/profil/password', [FrsProfileController::class, 'updatePassword']);
 
     Route::get('/wilayas/{idWilaya}/communes', [FrsProfileController::class, 'communes']);
 
     Route::middleware('auth.admin')->group(function () {
+        Route::get('/produits/create', [FrsProduitController::class, 'create']);
+        Route::post('/produits', [FrsProduitController::class, 'store']);
+        Route::get('/produits/{id}/edit', [FrsProduitController::class, 'edit']);
+        Route::put('/produits/{id}', [FrsProduitController::class, 'update']);
+        Route::delete('/produits/{id}', [FrsProduitController::class, 'destroy']);
+        Route::post('/produits/{id}/toggle-actif', [FrsProduitController::class, 'toggleActif']);
+
+        Route::put('/frais-livraison', [FrsFraisLivraisonController::class, 'update']);
+
+        Route::get('/profil', [FrsProfileController::class, 'edit']);
+        Route::put('/profil', [FrsProfileController::class, 'update']);
+        Route::put('/profil/password', [FrsProfileController::class, 'updatePassword']);
+
         Route::get('/parametres-site', [FrsSiteSettingsController::class, 'edit']);
         Route::put('/parametres-site', [FrsSiteSettingsController::class, 'update']);
 

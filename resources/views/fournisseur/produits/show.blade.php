@@ -2,6 +2,7 @@
 
 @section('content')
 @php
+    $canEdit = (string)session('role', '') === 'fournisseur' || (int)session('is_admin', 0) === 1;
     $tiers = ($produit->relationLoaded('quantityPrices') ? $produit->quantityPrices : collect())
         ->map(fn ($t) => [
             'quantity_min' => (int) $t->quantity_min,
@@ -20,11 +21,13 @@
             <div class="text-sm text-white/60">{{ $produit->designation }} • {{ $produit->reference }}</div>
         </div>
         <div class="flex items-center gap-2">
-            <a href="{{ url('/fournisseur/produits/'.$produit->id.'/edit') }}"
-               class="rounded-2xl px-4 py-3 font-bold text-white"
-               style="background: linear-gradient(135deg, var(--frs-primary), #0A3D7A);">
-                Modifier
-            </a>
+            @if($canEdit)
+                <a href="{{ url('/fournisseur/produits/'.$produit->id.'/edit') }}"
+                   class="rounded-2xl px-4 py-3 font-bold text-white"
+                   style="background: linear-gradient(135deg, var(--frs-primary), #0A3D7A);">
+                    Modifier
+                </a>
+            @endif
             <a href="{{ url('/fournisseur/produits') }}"
                class="rounded-2xl px-4 py-3 font-bold border border-white/10 hover:bg-white/10">
                 Retour
