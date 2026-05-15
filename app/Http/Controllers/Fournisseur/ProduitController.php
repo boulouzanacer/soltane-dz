@@ -11,6 +11,8 @@ use Illuminate\Contracts\View\View;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Pagination\LengthAwarePaginator;
+use Illuminate\Database\QueryException;
 use Illuminate\Validation\Rule;
 
 class ProduitController extends Controller
@@ -82,24 +84,41 @@ class ProduitController extends Controller
         $q = trim((string) $request->query('q', ''));
         $categorie = trim((string) $request->query('categorie', ''));
 
-        $categories = Categorie::query()
-            ->where('id_frs', $frsId)
-            ->orderBy('nom')
-            ->pluck('nom')
-            ->values();
+        $dbError = null;
+        try {
+            $categories = Categorie::query()
+                ->where('id_frs', $frsId)
+                ->orderBy('nom')
+                ->pluck('nom')
+                ->values();
+        } catch (QueryException $e) {
+            $categories = collect();
+            $dbError = 'La base de données n’est pas à jour. Lancez les migrations (php artisan migrate --force).';
+        }
 
-        $produits = Produit::query()
-            ->where('id_frs', $frsId)
-            ->when($q !== '', function ($query) use ($q) {
-                $query->where(function ($sub) use ($q) {
-                    $sub->where('designation', 'like', "%{$q}%")
-                        ->orWhere('reference', 'like', "%{$q}%");
-                });
-            })
-            ->when($categorie !== '', fn ($query) => $query->where('categorie', $categorie))
-            ->orderByDesc('created_at')
-            ->paginate(18)
-            ->withQueryString();
+        try {
+            $produits = Produit::query()
+                ->where('id_frs', $frsId)
+                ->when($q !== '', function ($query) use ($q) {
+                    $query->where(function ($sub) use ($q) {
+                        $sub->where('designation', 'like', "%{$q}%")
+                            ->orWhere('reference', 'like', "%{$q}%");
+                    });
+                })
+                ->when($categorie !== '', fn ($query) => $query->where('categorie', $categorie))
+                ->orderByDesc('created_at')
+                ->paginate(18)
+                ->withQueryString();
+        } catch (QueryException $e) {
+            $produits = new LengthAwarePaginator(
+                [],
+                0,
+                18,
+                (int) $request->query('page', 1),
+                ['path' => $request->url(), 'query' => $request->query()]
+            );
+            $dbError = 'La base de données n’est pas à jour. Lancez les migrations (php artisan migrate --force).';
+        }
 
         return view('fournisseur.produits.index', [
             'title' => 'Mes Produits',
@@ -107,6 +126,7 @@ class ProduitController extends Controller
             'categorie' => $categorie,
             'categories' => $categories,
             'produits' => $produits,
+            'db_error' => $dbError,
         ]);
     }
 

@@ -3,6 +3,12 @@
 @section('content')
 @php($canEdit = (string)session('role', '') === 'fournisseur' || (int)session('is_admin', 0) === 1)
 <div class="space-y-4">
+    @if(($db_error ?? null))
+        <div class="rounded-2xl border border-red-400/20 bg-red-500/10 px-4 py-3 text-red-200">
+            {{ $db_error }}
+        </div>
+    @endif
+
     <div class="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-3">
         <form method="GET" action="{{ url('/fournisseur/produits') }}" class="grid grid-cols-1 md:grid-cols-3 gap-3 w-full lg:w-auto">
             <div class="md:col-span-2">
