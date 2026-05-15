@@ -4,7 +4,6 @@ namespace App\Http\Controllers\Fournisseur;
 
 use App\Http\Controllers\Controller;
 use App\Models\FrsUser;
-use App\Models\FrsUserTask;
 use Illuminate\Contracts\View\View;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -24,7 +23,6 @@ class UtilisateurController extends Controller
                     $sub->where('nom', 'like', "%{$q}%")->orWhere('email', 'like', "%{$q}%");
                 });
             })
-            ->withCount('tasks')
             ->orderByDesc('id')
             ->paginate(15)
             ->withQueryString();
@@ -74,16 +72,9 @@ class UtilisateurController extends Controller
             ->where('id_frs', $frsId)
             ->findOrFail($id);
 
-        $tasks = FrsUserTask::query()
-            ->where('id_frs_user', $user->id)
-            ->orderByRaw("case when statut = 'todo' then 1 when statut = 'in_progress' then 2 when statut = 'done' then 3 else 4 end")
-            ->orderByDesc('id')
-            ->get();
-
         return view('fournisseur.utilisateurs.show', [
             'title' => 'Utilisateur',
             'user' => $user,
-            'tasks' => $tasks,
         ]);
     }
 
@@ -145,77 +136,4 @@ class UtilisateurController extends Controller
 
         return redirect()->to('/fournisseur/utilisateurs')->with('success', 'Utilisateur supprimé.');
     }
-
-    public function storeTask(Request $request, int $id): RedirectResponse
-    {
-        $frsId = (int) session('frs_id');
-
-        $user = FrsUser::query()
-            ->where('id_frs', $frsId)
-            ->findOrFail($id);
-
-        $data = $request->validate([
-            'titre' => ['required', 'string', 'max:255'],
-            'description' => ['nullable', 'string', 'max:2000'],
-            'statut' => ['required', 'in:todo,in_progress,done'],
-            'due_date' => ['nullable', 'date'],
-        ]);
-
-        FrsUserTask::create([
-            'id_frs_user' => $user->id,
-            'titre' => $data['titre'],
-            'description' => $data['description'] ?? null,
-            'statut' => $data['statut'],
-            'due_date' => $data['due_date'] ?? null,
-        ]);
-
-        return redirect()->to('/fournisseur/utilisateurs/'.$user->id)->with('success', 'Tâche ajoutée.');
-    }
-
-    public function updateTask(Request $request, int $id, int $taskId): RedirectResponse
-    {
-        $frsId = (int) session('frs_id');
-
-        $user = FrsUser::query()
-            ->where('id_frs', $frsId)
-            ->findOrFail($id);
-
-        $task = FrsUserTask::query()
-            ->where('id_frs_user', $user->id)
-            ->findOrFail($taskId);
-
-        $data = $request->validate([
-            'titre' => ['required', 'string', 'max:255'],
-            'description' => ['nullable', 'string', 'max:2000'],
-            'statut' => ['required', 'in:todo,in_progress,done'],
-            'due_date' => ['nullable', 'date'],
-        ]);
-
-        $task->update([
-            'titre' => $data['titre'],
-            'description' => $data['description'] ?? null,
-            'statut' => $data['statut'],
-            'due_date' => $data['due_date'] ?? null,
-        ]);
-
-        return redirect()->to('/fournisseur/utilisateurs/'.$user->id)->with('success', 'Tâche mise à jour.');
-    }
-
-    public function destroyTask(int $id, int $taskId): RedirectResponse
-    {
-        $frsId = (int) session('frs_id');
-
-        $user = FrsUser::query()
-            ->where('id_frs', $frsId)
-            ->findOrFail($id);
-
-        $task = FrsUserTask::query()
-            ->where('id_frs_user', $user->id)
-            ->findOrFail($taskId);
-
-        $task->delete();
-
-        return redirect()->to('/fournisseur/utilisateurs/'.$user->id)->with('success', 'Tâche supprimée.');
-    }
 }
-

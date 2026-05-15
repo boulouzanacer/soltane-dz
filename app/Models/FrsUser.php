@@ -5,7 +5,6 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
-use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class FrsUser extends Model
 {
@@ -30,10 +29,4 @@ class FrsUser extends Model
     {
         return $this->belongsTo(Fournisseur::class, 'id_frs', 'id');
     }
-
-    public function tasks(): HasMany
-    {
-        return $this->hasMany(FrsUserTask::class, 'id_frs_user', 'id');
-    }
 }
-

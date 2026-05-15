@@ -44,7 +44,6 @@
                         <th class="text-left py-3 px-4 font-semibold">Email</th>
                         <th class="text-center py-3 px-4 font-semibold">Rôle</th>
                         <th class="text-center py-3 px-4 font-semibold">Statut</th>
-                        <th class="text-center py-3 px-4 font-semibold">Tâches</th>
                         <th class="text-right py-3 px-4 font-semibold">Action</th>
                     </tr>
                 </thead>
@@ -68,7 +67,6 @@
                                     {{ $active ? 'Actif' : 'Inactif' }}
                                 </span>
                             </td>
-                            <td class="py-3 px-4 text-center font-extrabold">{{ (int)($u->tasks_count ?? 0) }}</td>
                             <td class="py-3 px-4 text-right" onclick="event.stopPropagation()">
                                 <div class="inline-flex items-center gap-2">
                                     <a href="{{ url('/fournisseur/utilisateurs/'.$u->id.'/edit') }}"
@@ -89,7 +87,7 @@
                         </tr>
                     @empty
                         <tr>
-                            <td colspan="6" class="py-10 text-center text-white/60">Aucun utilisateur</td>
+                            <td colspan="5" class="py-10 text-center text-white/60">Aucun utilisateur</td>
                         </tr>
                     @endforelse
                 </tbody>
@@ -102,4 +100,3 @@
     </div>
 </div>
 @endsection
-

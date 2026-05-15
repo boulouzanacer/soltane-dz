@@ -95,8 +95,5 @@ Route::prefix('fournisseur')->middleware('auth.fournisseur')->group(function () 
         Route::get('/utilisateurs/{id}/edit', [FrsUtilisateurController::class, 'edit']);
         Route::put('/utilisateurs/{id}', [FrsUtilisateurController::class, 'update']);
         Route::delete('/utilisateurs/{id}', [FrsUtilisateurController::class, 'destroy']);
-        Route::post('/utilisateurs/{id}/taches', [FrsUtilisateurController::class, 'storeTask']);
-        Route::put('/utilisateurs/{id}/taches/{taskId}', [FrsUtilisateurController::class, 'updateTask']);
-        Route::delete('/utilisateurs/{id}/taches/{taskId}', [FrsUtilisateurController::class, 'destroyTask']);
     });
 });
