@@ -78,6 +78,7 @@ Route::prefix('fournisseur')->middleware('auth.fournisseur')->group(function () 
         Route::put('/produits/{id}', [FrsProduitController::class, 'update']);
         Route::delete('/produits/{id}', [FrsProduitController::class, 'destroy']);
         Route::post('/produits/{id}/toggle-actif', [FrsProduitController::class, 'toggleActif']);
+        Route::post('/produits/import', [FrsProduitController::class, 'import']);
 
         Route::put('/frais-livraison', [FrsFraisLivraisonController::class, 'update']);
 

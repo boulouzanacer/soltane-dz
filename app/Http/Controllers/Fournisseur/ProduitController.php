@@ -8,6 +8,7 @@ use App\Models\Produit;
 use App\Models\ProduitImage;
 use App\Services\ImageProduitService;
 use Illuminate\Contracts\View\View;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -15,6 +16,7 @@ use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Database\QueryException;
 use Illuminate\Validation\Rule;
 use Throwable;
+use Illuminate\Support\Str;
 
 class ProduitController extends Controller
 {
@@ -461,6 +463,220 @@ class ProduitController extends Controller
         $produit->delete();
 
         return redirect()->to('/fournisseur/produits')->with('success', 'Produit supprimé.');
+    }
+
+    public function import(Request $request): JsonResponse|RedirectResponse
+    {
+        $frsId = (int) session('frs_id');
+
+        $data = $request->validate([
+            'mapping' => ['required', 'array'],
+            'mapping.reference' => ['required', 'string', 'max:255'],
+            'mapping.designation' => ['nullable', 'string', 'max:255'],
+            'mapping.description' => ['nullable', 'string', 'max:255'],
+            'mapping.pv_1' => ['nullable', 'string', 'max:255'],
+            'mapping.pv_2' => ['nullable', 'string', 'max:255'],
+            'mapping.pv_3' => ['nullable', 'string', 'max:255'],
+            'mapping.stock' => ['nullable', 'string', 'max:255'],
+            'mapping.categorie' => ['nullable', 'string', 'max:255'],
+            'update' => ['nullable', 'array'],
+            'update.*' => ['string', Rule::in(['designation', 'description', 'pv_1', 'pv_2', 'pv_3', 'stock', 'categorie'])],
+            'stock_mode' => ['nullable', 'string', Rule::in(['replace', 'add'])],
+            'rows' => ['required', 'array', 'min:1', 'max:2000'],
+            'rows.*' => ['array'],
+        ]);
+
+        $mapping = $data['mapping'];
+        $update = collect($data['update'] ?? [])->values()->all();
+        $stockMode = (string) ($data['stock_mode'] ?? 'replace');
+        $rows = $data['rows'];
+
+        $refKey = (string) $mapping['reference'];
+
+        $refs = collect($rows)
+            ->map(fn ($r) => is_array($r) ? trim((string) ($r[$refKey] ?? '')) : '')
+            ->filter(fn ($v) => $v !== '')
+            ->map(fn ($v) => mb_substr($v, 0, 100))
+            ->values()
+            ->all();
+
+        if (count($refs) === 0) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Aucune référence valide trouvée dans le fichier.',
+                'created' => 0,
+                'updated' => 0,
+                'skipped' => 0,
+                'errors' => [],
+            ], 422);
+        }
+
+        $existing = Produit::query()
+            ->where('id_frs', $frsId)
+            ->whereIn('reference', $refs)
+            ->get(['id', 'reference', 'stock'])
+            ->keyBy('reference');
+
+        $created = 0;
+        $updatedCount = 0;
+        $skipped = 0;
+        $errors = [];
+
+        DB::transaction(function () use (
+            $rows,
+            $mapping,
+            $refKey,
+            $frsId,
+            $existing,
+            $update,
+            $stockMode,
+            &$created,
+            &$updatedCount,
+            &$skipped,
+            &$errors
+        ) {
+            $catCache = Categorie::query()
+                ->where('id_frs', $frsId)
+                ->pluck('id', 'nom')
+                ->all();
+
+            foreach ($rows as $i => $row) {
+                if (! is_array($row)) {
+                    $skipped++;
+                    continue;
+                }
+
+                $reference = trim((string) ($row[$refKey] ?? ''));
+                $reference = mb_substr($reference, 0, 100);
+                if ($reference === '') {
+                    $skipped++;
+                    continue;
+                }
+
+                $get = function (string $field) use ($mapping, $row): ?string {
+                    $col = trim((string) ($mapping[$field] ?? ''));
+                    if ($col === '') return null;
+                    $v = $row[$col] ?? null;
+                    if ($v === null) return null;
+                    $s = is_string($v) ? $v : (is_numeric($v) ? (string) $v : (string) $v);
+                    $s = trim($s);
+                    return $s === '' ? null : $s;
+                };
+
+                $designation = $get('designation');
+                $description = $get('description');
+                $pv1Raw = $get('pv_1');
+                $pv2Raw = $get('pv_2');
+                $pv3Raw = $get('pv_3');
+                $stockRaw = $get('stock');
+                $catName = $get('categorie');
+
+                $pv1 = $pv1Raw !== null ? (float) str_replace(',', '.', $pv1Raw) : null;
+                $pv2 = $pv2Raw !== null ? (float) str_replace(',', '.', $pv2Raw) : null;
+                $pv3 = $pv3Raw !== null ? (float) str_replace(',', '.', $pv3Raw) : null;
+                $stockVal = $stockRaw !== null ? (int) round((float) str_replace(',', '.', $stockRaw)) : null;
+
+                $catName = $catName !== null ? mb_substr($catName, 0, 100) : 'Général';
+                if (! array_key_exists($catName, $catCache)) {
+                    $slug = Str::slug($catName);
+                    if ($slug === '') {
+                        $slug = Str::slug('categorie-'.$catName);
+                    }
+
+                    try {
+                        $catId = DB::table('categories')->insertGetId([
+                            'id_frs' => $frsId,
+                            'nom' => $catName,
+                            'slug' => $slug,
+                            'created_at' => now(),
+                            'updated_at' => now(),
+                        ]);
+                        $catCache[$catName] = $catId;
+                    } catch (Throwable $e) {
+                        $id = DB::table('categories')
+                            ->where('id_frs', $frsId)
+                            ->where('nom', $catName)
+                            ->value('id');
+                        if ($id) {
+                            $catCache[$catName] = (int) $id;
+                        } else {
+                            $errors[] = ['row' => $i + 2, 'reference' => $reference, 'message' => 'Impossible de créer la catégorie.'];
+                            $catCache[$catName] = 0;
+                        }
+                    }
+                }
+
+                $prod = $existing->get($reference);
+                if ($prod) {
+                    $payload = [];
+                    if (in_array('designation', $update, true) && $designation !== null) {
+                        $payload['designation'] = mb_substr($designation, 0, 255);
+                    }
+                    if (in_array('description', $update, true) && $description !== null) {
+                        $payload['description'] = $description;
+                    }
+                    if (in_array('pv_1', $update, true) && $pv1 !== null && $pv1 >= 0) {
+                        $payload['pv_1'] = $pv1;
+                    }
+                    if (in_array('pv_2', $update, true) && $pv2 !== null && $pv2 >= 0) {
+                        $payload['pv_2'] = $pv2;
+                    }
+                    if (in_array('pv_3', $update, true) && $pv3 !== null && $pv3 >= 0) {
+                        $payload['pv_3'] = $pv3;
+                    }
+                    if (in_array('categorie', $update, true) && $catName !== null) {
+                        $payload['categorie'] = $catName;
+                    }
+                    if (in_array('stock', $update, true) && $stockVal !== null && $stockVal >= 0) {
+                        $payload['stock'] = $stockMode === 'add'
+                            ? ((int) ($prod->stock ?? 0) + $stockVal)
+                            : $stockVal;
+                    }
+
+                    if (count($payload) > 0) {
+                        Produit::query()->where('id', $prod->id)->update($payload);
+                        $updatedCount++;
+                    } else {
+                        $skipped++;
+                    }
+                } else {
+                    $new = [
+                        'id_frs' => $frsId,
+                        'reference' => $reference,
+                        'designation' => mb_substr((string)($designation ?? $reference), 0, 255),
+                        'description' => (string)($description ?? ''),
+                        'pv_1' => (float) max(0, (float)($pv1 ?? 0)),
+                        'pv_2' => (float) max(0, (float)($pv2 ?? ($pv1 ?? 0))),
+                        'pv_3' => (float) max(0, (float)($pv3 ?? ($pv1 ?? 0))),
+                        'stock' => (int) max(0, (int)($stockVal ?? 0)),
+                        'categorie' => (string) ($catName ?? 'Général'),
+                        'abonne_only' => 0,
+                        'enable_tier_pricing' => 0,
+                        'actif' => 1,
+                    ];
+
+                    if (trim($new['description']) === '') {
+                        $new['description'] = '—';
+                    }
+
+                    try {
+                        Produit::create($new);
+                        $created++;
+                    } catch (Throwable $e) {
+                        $errors[] = ['row' => $i + 2, 'reference' => $reference, 'message' => 'Impossible de créer le produit.'];
+                    }
+                }
+            }
+        });
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Import terminé.',
+            'created' => $created,
+            'updated' => $updatedCount,
+            'skipped' => $skipped,
+            'errors' => $errors,
+        ]);
     }
 
     public function toggleActif(int $id): RedirectResponse
