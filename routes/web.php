@@ -56,29 +56,31 @@ Route::prefix('fournisseur')->middleware('auth.fournisseur')->group(function () 
     Route::delete('/categories/{id}', [FrsCategorieController::class, 'destroy']);
 
     Route::get('/produits', [FrsProduitController::class, 'index']);
-    Route::get('/produits/{id}', [FrsProduitController::class, 'show']);
     Route::get('/produits/create', [FrsProduitController::class, 'create']);
     Route::post('/produits', [FrsProduitController::class, 'store']);
     Route::post('/produits/import', [FrsProduitController::class, 'import']);
+    Route::get('/produits/{id}', [FrsProduitController::class, 'show'])->whereNumber('id');
 
     Route::get('/clients', [FrsClientController::class, 'index']);
-    Route::get('/clients/{id}', [FrsClientController::class, 'show']);
-    Route::put('/clients/{id}/tarif', [FrsClientController::class, 'updateTarif']);
+    Route::get('/clients/{id}', [FrsClientController::class, 'show'])->whereNumber('id');
+    Route::put('/clients/{id}/tarif', [FrsClientController::class, 'updateTarif'])->whereNumber('id');
 
     Route::get('/commandes', [FrsCommandeController::class, 'index']);
-    Route::get('/commandes/{id}', [FrsCommandeController::class, 'show']);
-    Route::put('/commandes/{id}/statut', [FrsCommandeController::class, 'updateStatut']);
-    Route::put('/commandes/{id}/lignes/{ligneId}', [FrsCommandeController::class, 'updateLigneQuantite']);
+    Route::get('/commandes/{id}', [FrsCommandeController::class, 'show'])->whereNumber('id');
+    Route::put('/commandes/{id}/statut', [FrsCommandeController::class, 'updateStatut'])->whereNumber('id');
+    Route::put('/commandes/{id}/lignes/{ligneId}', [FrsCommandeController::class, 'updateLigneQuantite'])
+        ->whereNumber('id')
+        ->whereNumber('ligneId');
 
     Route::get('/frais-livraison', [FrsFraisLivraisonController::class, 'index']);
 
-    Route::get('/wilayas/{idWilaya}/communes', [FrsProfileController::class, 'communes']);
+    Route::get('/wilayas/{idWilaya}/communes', [FrsProfileController::class, 'communes'])->whereNumber('idWilaya');
 
     Route::middleware('auth.admin')->group(function () {
-        Route::get('/produits/{id}/edit', [FrsProduitController::class, 'edit']);
-        Route::put('/produits/{id}', [FrsProduitController::class, 'update']);
-        Route::delete('/produits/{id}', [FrsProduitController::class, 'destroy']);
-        Route::post('/produits/{id}/toggle-actif', [FrsProduitController::class, 'toggleActif']);
+        Route::get('/produits/{id}/edit', [FrsProduitController::class, 'edit'])->whereNumber('id');
+        Route::put('/produits/{id}', [FrsProduitController::class, 'update'])->whereNumber('id');
+        Route::delete('/produits/{id}', [FrsProduitController::class, 'destroy'])->whereNumber('id');
+        Route::post('/produits/{id}/toggle-actif', [FrsProduitController::class, 'toggleActif'])->whereNumber('id');
 
         Route::put('/frais-livraison', [FrsFraisLivraisonController::class, 'update']);
 
