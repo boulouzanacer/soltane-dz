@@ -77,7 +77,7 @@
             <div class="text-sm text-slate-500">{{ $produits->total() }} produit(s)</div>
         </div>
 
-        <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-2 sm:gap-3">
+        <div class="grid grid-cols-3 sm:grid-cols-4 lg:grid-cols-6 gap-2">
             @forelse($produits as $p)
                 @php
                     $raw = trim((string)($p->image_principale ?? ''));
@@ -89,9 +89,9 @@
                         else $img = url('/'.$raw);
                     }
                 @endphp
-                <div class="rounded-xl sm:rounded-2xl border border-slate-200 bg-[var(--store-card)] overflow-hidden">
+                <div class="rounded-xl border border-slate-200 bg-[var(--store-card)] overflow-hidden">
                     <a href="{{ url('/produits/'.$p->id) }}" class="block">
-                        <div class="aspect-square sm:aspect-[4/3] bg-slate-100">
+                        <div class="aspect-square bg-slate-100">
                             @if($img !== '')
                                 <img src="{{ $img }}" alt="" class="w-full h-full object-cover">
                             @else
@@ -101,19 +101,19 @@
                             @endif
                         </div>
                     </a>
-                    <div class="p-2 sm:p-3">
+                    <div class="p-2">
                         <div class="flex items-start justify-between gap-3">
-                            <div>
-                                <a href="{{ url('/produits/'.$p->id) }}" class="block font-extrabold text-[13px] sm:text-sm leading-snug hover:underline truncate">
+                            <div class="min-w-0 flex-1">
+                                <a href="{{ url('/produits/'.$p->id) }}" class="block font-extrabold text-xs sm:text-[13px] leading-snug hover:underline truncate">
                                     {{ $p->designation }}
                                 </a>
-                                <div class="mt-1 text-xs text-slate-500">Ref: {{ $p->reference }}</div>
+                                <div class="mt-1 text-[11px] text-slate-500 truncate">Ref: {{ $p->reference }}</div>
                             </div>
-                            <div class="text-right">
+                            <div class="text-right shrink-0 min-w-[88px]">
                                 @if(($can_show_prices ?? false) || ($client ?? null))
-                                    <div class="font-extrabold text-xs sm:text-sm">{{ number_format((float)$p->prixUnitairePourQuantite($client ?? null, 1), 2, '.', ' ') }} DA</div>
+                                    <div class="font-extrabold text-xs sm:text-[13px] whitespace-nowrap leading-none">{{ number_format((float)$p->prixUnitairePourQuantite($client ?? null, 1), 2, '.', ' ') }} DA</div>
                                 @else
-                                    <div class="text-[11px] sm:text-xs font-extrabold text-slate-500">Connectez-vous</div>
+                                    <div class="text-[11px] sm:text-[12px] font-extrabold text-slate-500 whitespace-nowrap leading-none">Connectez-vous</div>
                                 @endif
                                 <div class="hidden sm:block text-[11px] {{ (int)$p->stock > 0 ? 'text-emerald-700' : 'text-red-600' }}">
                                     {{ (int)$p->stock > 0 ? ('Stock: '.(int)$p->stock) : 'Rupture' }}
