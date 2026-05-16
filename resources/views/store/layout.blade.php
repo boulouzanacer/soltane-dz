@@ -33,8 +33,9 @@
 @php($tiktokPixelId = trim((string)($storeFrs?->tiktok_pixel_id ?? '')))
 <div class="min-h-screen flex flex-col">
     <header class="sticky top-0 z-40 border-b border-slate-200 bg-white/80 backdrop-blur">
-        <div class="max-w-7xl mx-auto px-4 py-3 flex flex-wrap items-center justify-between gap-3">
-            <a href="{{ url('/') }}" class="flex items-center gap-3 min-w-0">
+        <div class="max-w-7xl mx-auto px-4 py-3 grid grid-cols-2 gap-3 sm:flex sm:flex-wrap sm:items-center sm:justify-between">
+            <div class="flex flex-col gap-2 sm:flex-row sm:items-center sm:gap-3 min-w-0">
+                <a href="{{ url('/') }}" class="inline-flex items-center gap-3 min-w-0">
                 @if(($storeFrs?->logo_url ?? '') !== '')
                     <img src="{{ $storeFrs->logo_url }}"
                          alt=""
@@ -45,7 +46,7 @@
                         {{ strtoupper(substr((string)($storeFrs?->nom_frs ?? 'S'), 0, 1)) }}
                     </div>
                 @endif
-                <div class="leading-tight min-w-0">
+                <div class="leading-tight min-w-0 hidden sm:block">
                     <div class="font-extrabold tracking-wide truncate">{{ $storeFrs?->nom_frs ?? config('app.name') }}</div>
                     <div class="text-xs text-slate-500">
                         @if(($storeFrs?->telephone ?? '') !== '')
@@ -61,7 +62,7 @@
                 </div>
             </a>
 
-            <div class="flex items-center gap-2">
+                <div class="flex items-center gap-2 justify-start">
                 <a href="{{ url('/panier') }}"
                    class="inline-flex items-center gap-2 rounded-xl px-3 py-2 text-sm font-semibold border border-slate-200 bg-white hover:bg-slate-50">
                     <i class="fa-solid fa-cart-shopping text-[var(--store-primary)]"></i>
@@ -99,6 +100,22 @@
                     </a>
                 @endif
             </div>
+            </div>
+
+            <a href="{{ url('/') }}" class="text-right min-w-0 flex flex-col justify-center sm:hidden">
+                <div class="font-extrabold tracking-wide truncate">{{ $storeFrs?->nom_frs ?? config('app.name') }}</div>
+                <div class="text-xs text-slate-500">
+                    @if(($storeFrs?->telephone ?? '') !== '')
+                        <a href="tel:{{ $storeFrs->telephone }}" class="hover:underline">{{ $storeFrs->telephone }}</a>
+                    @else
+                        Store
+                    @endif
+                    @if(($storeFrs?->google_maps_url ?? '') !== '')
+                        <span class="mx-2 text-slate-300">•</span>
+                        <a href="{{ $storeFrs->google_maps_url }}" target="_blank" class="hover:underline">Localisation</a>
+                    @endif
+                </div>
+            </a>
         </div>
     </header>
 
