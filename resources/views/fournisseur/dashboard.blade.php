@@ -33,7 +33,7 @@
     <div class="rounded-2xl p-5 border border-white/10 bg-[var(--frs-card)]">
         <div class="flex items-center justify-between">
             <div>
-                <div class="text-sm text-white/60">Clients abonnés</div>
+                <div class="text-sm text-white/60">Clients</div>
                 <div class="text-3xl font-extrabold mt-1">{{ $clients_abonnes }}</div>
             </div>
             <div class="h-12 w-12 rounded-2xl flex items-center justify-center"
@@ -138,4 +138,3 @@
     </div>
 </div>
 @endsection
-

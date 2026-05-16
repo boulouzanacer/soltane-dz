@@ -468,6 +468,7 @@ class ProduitController extends Controller
     public function import(Request $request): JsonResponse|RedirectResponse
     {
         $frsId = (int) session('frs_id');
+        $isAdmin = (int) session('is_admin', 0) === 1 || (string) session('role', '') === 'fournisseur';
 
         $data = $request->validate([
             'mapping' => ['required', 'array'],
@@ -487,7 +488,7 @@ class ProduitController extends Controller
         ]);
 
         $mapping = $data['mapping'];
-        $update = collect($data['update'] ?? [])->values()->all();
+        $update = $isAdmin ? collect($data['update'] ?? [])->values()->all() : [];
         $stockMode = (string) ($data['stock_mode'] ?? 'replace');
         $rows = $data['rows'];
 
@@ -530,6 +531,7 @@ class ProduitController extends Controller
             $existing,
             $update,
             $stockMode,
+            $isAdmin,
             &$created,
             &$updatedCount,
             &$skipped,
@@ -608,6 +610,11 @@ class ProduitController extends Controller
 
                 $prod = $existing->get($reference);
                 if ($prod) {
+                    if (! $isAdmin) {
+                        $skipped++;
+                        continue;
+                    }
+
                     $payload = [];
                     if (in_array('designation', $update, true) && $designation !== null) {
                         $payload['designation'] = mb_substr($designation, 0, 255);

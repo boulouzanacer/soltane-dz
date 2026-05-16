@@ -72,6 +72,7 @@
 <body class="min-h-screen text-slate-100"
       :class="dark ? 'bg-[var(--frs-bg)]' : 'bg-slate-100 text-slate-900'">
 @php($frs = \App\Models\Fournisseur::find(session('frs_id')))
+@php($frsUser = (string) session('role', '') === 'frs_user' ? \App\Models\FrsUser::find((int) session('frs_user_id')) : null)
 @php($isAdmin = (int) session('is_admin', 0) === 1 || (string) session('role', '') === 'fournisseur')
 <div class="flex min-h-screen">
     <aside class="fixed inset-y-0 left-0 w-[240px] border-r bg-[var(--frs-bg)]"
@@ -188,11 +189,13 @@
                             @click="profileOpen = !profileOpen">
                         <div class="h-9 w-9 rounded-full flex items-center justify-center font-bold"
                              style="background: linear-gradient(135deg, var(--frs-primary), #0A3D7A);">
-                            {{ strtoupper(substr($frs?->nom_frs ?? 'F', 0, 1)) }}
+                            {{ strtoupper(substr($frsUser?->nom ?? $frs?->nom_frs ?? 'F', 0, 1)) }}
                         </div>
                         <div class="text-left leading-tight hidden sm:block max-w-[180px]">
-                            <div class="text-sm font-bold truncate">{{ $frs?->nom_frs ?? 'Fournisseur' }}</div>
-                            <div class="text-xs opacity-70 truncate">{{ $frs?->email }}</div>
+                            <div class="text-sm font-bold truncate">
+                                {{ $frsUser ? trim(($frsUser->prenom ?? '').' '.($frsUser->nom ?? '')) : ($frs?->nom_frs ?? 'Fournisseur') }}
+                            </div>
+                            <div class="text-xs opacity-70 truncate">{{ $frsUser?->email ?? $frs?->email }}</div>
                             <div class="mt-1">
                                 <span class="inline-flex items-center rounded-full border px-2 py-0.5 text-[11px] font-bold {{ (int)($frs?->actif ?? 0) === 1 ? 'border-emerald-400/20 bg-emerald-500/15 text-emerald-300' : 'border-red-400/20 bg-red-500/15 text-red-300' }}">
                                     {{ (int)($frs?->actif ?? 0) === 1 ? 'Actif' : 'Inactif' }}

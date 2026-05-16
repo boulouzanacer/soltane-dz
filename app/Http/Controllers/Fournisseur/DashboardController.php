@@ -27,7 +27,6 @@ class DashboardController extends Controller
 
         $clientsAbonnes = Client::query()
             ->where('id_frs', $frsId)
-            ->where('type_client', 'abonne')
             ->count();
 
         $produitsActifs = Produit::query()

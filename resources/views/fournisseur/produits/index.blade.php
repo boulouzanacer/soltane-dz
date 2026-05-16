@@ -2,7 +2,8 @@
 
 @section('content')
 @php
-    $canEdit = (string)session('role', '') === 'fournisseur' || (int)session('is_admin', 0) === 1;
+    $canCreate = in_array((string) session('role', ''), ['fournisseur', 'frs_user'], true);
+    $canManage = (string)session('role', '') === 'fournisseur' || (int)session('is_admin', 0) === 1;
     $returnUrl = request()->fullUrl();
 @endphp
 <div class="space-y-4" x-data="productImport()">
@@ -46,7 +47,7 @@
             </div>
         </form>
 
-        @if($canEdit)
+        @if($canCreate)
             <div class="flex items-center gap-2 justify-end">
                 <input type="file"
                        class="hidden"
@@ -135,7 +136,7 @@
                                        class="rounded-xl px-3 py-2 text-xs font-extrabold border border-white/10 hover:bg-white/10">
                                         Détail
                                     </a>
-                                    @if($canEdit)
+                                    @if($canManage)
                                         <a href="{{ url('/fournisseur/produits/'.$p->id.'/edit').'?'.http_build_query(['return' => $returnUrl]) }}"
                                            class="rounded-xl px-3 py-2 text-xs font-extrabold border border-white/10 hover:bg-white/10">
                                             Modifier

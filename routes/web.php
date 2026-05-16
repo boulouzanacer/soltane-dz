@@ -57,6 +57,9 @@ Route::prefix('fournisseur')->middleware('auth.fournisseur')->group(function () 
 
     Route::get('/produits', [FrsProduitController::class, 'index']);
     Route::get('/produits/{id}', [FrsProduitController::class, 'show']);
+    Route::get('/produits/create', [FrsProduitController::class, 'create']);
+    Route::post('/produits', [FrsProduitController::class, 'store']);
+    Route::post('/produits/import', [FrsProduitController::class, 'import']);
 
     Route::get('/clients', [FrsClientController::class, 'index']);
     Route::get('/clients/{id}', [FrsClientController::class, 'show']);
@@ -72,13 +75,10 @@ Route::prefix('fournisseur')->middleware('auth.fournisseur')->group(function () 
     Route::get('/wilayas/{idWilaya}/communes', [FrsProfileController::class, 'communes']);
 
     Route::middleware('auth.admin')->group(function () {
-        Route::get('/produits/create', [FrsProduitController::class, 'create']);
-        Route::post('/produits', [FrsProduitController::class, 'store']);
         Route::get('/produits/{id}/edit', [FrsProduitController::class, 'edit']);
         Route::put('/produits/{id}', [FrsProduitController::class, 'update']);
         Route::delete('/produits/{id}', [FrsProduitController::class, 'destroy']);
         Route::post('/produits/{id}/toggle-actif', [FrsProduitController::class, 'toggleActif']);
-        Route::post('/produits/import', [FrsProduitController::class, 'import']);
 
         Route::put('/frais-livraison', [FrsFraisLivraisonController::class, 'update']);
 
