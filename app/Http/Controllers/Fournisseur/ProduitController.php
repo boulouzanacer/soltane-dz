@@ -163,7 +163,12 @@ class ProduitController extends Controller
         $isAdmin = (int) session('is_admin', 0) === 1 || (string) session('role', '') === 'fournisseur';
 
         $data = $request->validate([
-            'reference' => ['required', 'string', 'max:100'],
+            'reference' => [
+                'required',
+                'string',
+                'max:100',
+                Rule::unique('produit', 'reference')->where(fn ($q) => $q->where('id_frs', $frsId)),
+            ],
             'designation' => ['required', 'string', 'max:255'],
             'description' => ['required', 'string'],
             'pv_1' => ['required', 'numeric', 'min:0'],
@@ -183,6 +188,8 @@ class ProduitController extends Controller
             'images_order' => ['nullable', 'array'],
             'images_order.*' => ['string'],
             'primary_image' => ['nullable', 'string'],
+        ], [
+            'reference.unique' => 'Référence déjà utilisée.',
         ]);
 
         $categorieNom = Categorie::query()
@@ -316,7 +323,14 @@ class ProduitController extends Controller
         $existingCount = ProduitImage::query()->where('id_produit', $produit->id)->count();
 
         $data = $request->validate([
-            'reference' => ['required', 'string', 'max:100'],
+            'reference' => [
+                'required',
+                'string',
+                'max:100',
+                Rule::unique('produit', 'reference')
+                    ->where(fn ($q) => $q->where('id_frs', $frsId))
+                    ->ignore($produit->id),
+            ],
             'designation' => ['required', 'string', 'max:255'],
             'description' => ['required', 'string'],
             'pv_1' => ['required', 'numeric', 'min:0'],
@@ -338,6 +352,8 @@ class ProduitController extends Controller
             'images_order' => ['nullable', 'array'],
             'images_order.*' => ['string'],
             'primary_image' => ['nullable', 'string'],
+        ], [
+            'reference.unique' => 'Référence déjà utilisée.',
         ]);
 
         $categorieNom = Categorie::query()
