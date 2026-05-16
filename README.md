@@ -1,4 +1,4 @@
-# SafeSoft G2D
+# Soltane Dz
 
 Monorepo:
 - Backend Laravel: `safesoft-g2d`

@@ -83,7 +83,7 @@
                 G2D
             </div>
             <div class="leading-tight">
-                <div class="font-extrabold tracking-wide">SafeSoft G2D</div>
+                <div class="font-extrabold tracking-wide">Soltane Dz</div>
                 <div class="text-xs" :class="dark ? 'text-white/60' : 'text-slate-500'">Espace Fournisseur</div>
             </div>
         </div>
