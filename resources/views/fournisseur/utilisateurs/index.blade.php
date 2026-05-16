@@ -40,10 +40,12 @@
             <table class="min-w-full text-sm">
                 <thead class="text-white/60">
                     <tr>
+                        <th class="text-left py-3 px-4 font-semibold">#</th>
                         <th class="text-left py-3 px-4 font-semibold">Nom</th>
                         <th class="text-left py-3 px-4 font-semibold">Email</th>
                         <th class="text-center py-3 px-4 font-semibold">Rôle</th>
                         <th class="text-center py-3 px-4 font-semibold">Statut</th>
+                        <th class="text-left py-3 px-4 font-semibold">Créé le</th>
                         <th class="text-right py-3 px-4 font-semibold">Action</th>
                     </tr>
                 </thead>
@@ -56,7 +58,8 @@
                                 : 'bg-white/10 text-white/70 border border-white/10';
                             $active = (int)($u->actif ?? 0) === 1;
                         @endphp
-                        <tr class="hover:bg-white/5 cursor-pointer" onclick="window.location='{{ url('/fournisseur/utilisateurs/'.$u->id) }}'">
+                        <tr class="hover:bg-white/5">
+                            <td class="py-3 px-4 font-semibold">#{{ $u->id }}</td>
                             <td class="py-3 px-4 font-semibold">{{ $u->nom }}</td>
                             <td class="py-3 px-4 text-white/80">{{ $u->email }}</td>
                             <td class="py-3 px-4 text-center">
@@ -67,7 +70,10 @@
                                     {{ $active ? 'Actif' : 'Inactif' }}
                                 </span>
                             </td>
-                            <td class="py-3 px-4 text-right" onclick="event.stopPropagation()">
+                            <td class="py-3 px-4 text-white/70">
+                                {{ \Illuminate\Support\Carbon::parse($u->created_at)->format('d/m/Y') }}
+                            </td>
+                            <td class="py-3 px-4 text-right">
                                 <div class="inline-flex items-center gap-2">
                                     <a href="{{ url('/fournisseur/utilisateurs/'.$u->id.'/edit') }}"
                                        class="rounded-xl px-3 py-2 text-xs font-extrabold border border-white/10 hover:bg-white/10">
@@ -87,7 +93,7 @@
                         </tr>
                     @empty
                         <tr>
-                            <td colspan="5" class="py-10 text-center text-white/60">Aucun utilisateur</td>
+                            <td colspan="7" class="py-10 text-center text-white/60">Aucun utilisateur</td>
                         </tr>
                     @endforelse
                 </tbody>
