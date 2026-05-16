@@ -2,6 +2,12 @@
 
 @section('content')
 <div class="space-y-6">
+    @if(session('error'))
+        <div class="rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-red-800">
+            {{ session('error') }}
+        </div>
+    @endif
+
     <div class="flex items-center justify-between">
         <div>
             <div class="text-2xl font-extrabold tracking-wide">Finaliser la commande</div>

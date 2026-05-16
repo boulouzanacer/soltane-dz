@@ -11,10 +11,12 @@ use App\Models\Fournisseur;
 use App\Models\Produit;
 use App\Models\Wilaya;
 use Illuminate\Contracts\View\View;
+use Illuminate\Database\QueryException;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
+use Throwable;
 
 class StoreController extends Controller
 {
@@ -534,99 +536,119 @@ class StoreController extends Controller
             return redirect()->to('/panier')->with('error', 'Boutique introuvable.');
         }
 
-        $result = DB::transaction(function () use ($client, $summary, $frsId, $data) {
-            $frs = Fournisseur::query()
-                ->where('id', $frsId)
-                ->where('actif', 1)
-                ->whereNull('deleted_at')
-                ->first();
-
-            if (! $frs) {
-                throw new \RuntimeException('Fournisseur introuvable.');
-            }
-
-            $sousTotal = 0.0;
-            $lines = [];
-
-            foreach ($summary['items'] as $it) {
-                /** @var Produit $p */
-                $p = $it['produit'];
-                $qty = (int) $it['qty'];
-
-                $pdb = Produit::query()
-                    ->where('id', $p->id)
-                    ->where('id_frs', $frs->id)
-                    ->whereNull('deleted_at')
+        try {
+            $result = DB::transaction(function () use ($client, $summary, $frsId, $data) {
+                $frs = Fournisseur::query()
+                    ->where('id', $frsId)
                     ->where('actif', 1)
-                    ->lockForUpdate()
+                    ->whereNull('deleted_at')
                     ->first();
 
-                if (! $pdb) {
-                    throw new \RuntimeException("Produit {$p->id} introuvable.");
+                if (! $frs) {
+                    throw new \RuntimeException('Fournisseur introuvable.');
                 }
 
-                if ((string) $client->type_client !== 'abonne' && (int) ($pdb->abonne_only ?? 0) === 1) {
-                    throw new \RuntimeException("Produit {$pdb->id} réservé aux abonnés.");
+                $sousTotal = 0.0;
+                $lines = [];
+
+                foreach ($summary['items'] as $it) {
+                    /** @var Produit $p */
+                    $p = $it['produit'];
+                    $qty = (int) $it['qty'];
+
+                    $pdb = Produit::query()
+                        ->where('id', $p->id)
+                        ->where('id_frs', $frs->id)
+                        ->whereNull('deleted_at')
+                        ->where('actif', 1)
+                        ->lockForUpdate()
+                        ->first();
+
+                    if (! $pdb) {
+                        throw new \RuntimeException("Produit {$p->id} introuvable.");
+                    }
+
+                    if ((string) $client->type_client !== 'abonne' && (int) ($pdb->abonne_only ?? 0) === 1) {
+                        throw new \RuntimeException("Produit {$pdb->id} réservé aux abonnés.");
+                    }
+
+                    if ((int) $pdb->stock < $qty) {
+                        throw new \RuntimeException("Stock insuffisant pour {$pdb->designation}.");
+                    }
+
+                    $prixUnitaire = (float) $pdb->prixUnitairePourQuantite($client, $qty);
+                    $lineTotal = $prixUnitaire * $qty;
+                    $sousTotal += $lineTotal;
+
+                    $lines[] = [
+                        'id_produit' => (int) $pdb->id,
+                        'quantite' => $qty,
+                        'prix_unitaire' => $prixUnitaire,
+                        'sous_total' => $lineTotal,
+                    ];
+
+                    $pdb->update(['stock' => (int) $pdb->stock - $qty]);
                 }
 
-                if ((int) $pdb->stock < $qty) {
-                    throw new \RuntimeException("Stock insuffisant pour {$pdb->designation}.");
+                $fraisLivraison = 0.0;
+                if ((int) ($frs->enable_frais_livraison ?? 0) === 1) {
+                    $fraisLivraison = (float) DB::table('frais_livraison')
+                        ->where('id_frs', (int) $frs->id)
+                        ->where('id_wilaya', (int) $data['id_wilaya'])
+                        ->value('frais');
+                    if ($fraisLivraison < 0) {
+                        $fraisLivraison = 0.0;
+                    }
                 }
 
-                $prixUnitaire = (float) $pdb->prixUnitairePourQuantite($client, $qty);
-                $lineTotal = $prixUnitaire * $qty;
-                $sousTotal += $lineTotal;
+                $montantTotal = $sousTotal + $fraisLivraison;
 
-                $lines[] = [
-                    'id_produit' => (int) $pdb->id,
-                    'quantite' => $qty,
-                    'prix_unitaire' => $prixUnitaire,
-                    'sous_total' => $lineTotal,
-                ];
-
-                $pdb->update(['stock' => (int) $pdb->stock - $qty]);
-            }
-
-            $fraisLivraison = 0.0;
-            if ((int) ($frs->enable_frais_livraison ?? 0) === 1) {
-                $fraisLivraison = (float) DB::table('frais_livraison')
-                    ->where('id_frs', (int) $frs->id)
-                    ->where('id_wilaya', (int) $data['id_wilaya'])
-                    ->value('frais');
-                if ($fraisLivraison < 0) {
-                    $fraisLivraison = 0.0;
-                }
-            }
-
-            $montantTotal = $sousTotal + $fraisLivraison;
-
-            $cmd = Cmd1::create([
-                'id_client' => (int) $client->id,
-                'id_frs' => (int) $frs->id,
-                'date_cmd' => Carbon::now(),
-                'statut' => 'en_attente',
-                'montant_total' => $montantTotal,
-                'sous_total' => $sousTotal,
-                'frais_livraison' => $fraisLivraison,
-                'adresse_livraison' => $data['adresse_livraison'],
-                'id_wilaya' => (int) $data['id_wilaya'],
-                'id_commune' => (int) $data['id_commune'],
-                'notes' => $data['notes'] ?? null,
-                'synced_pme' => 0,
-            ]);
-
-            foreach ($lines as $l) {
-                Cmd2::create([
-                    'id_cmd' => (int) $cmd->id,
-                    'id_produit' => (int) $l['id_produit'],
-                    'quantite' => (int) $l['quantite'],
-                    'prix_unitaire' => (float) $l['prix_unitaire'],
-                    'sous_total' => (float) $l['sous_total'],
+                $cmd = Cmd1::create([
+                    'id_client' => (int) $client->id,
+                    'id_frs' => (int) $frs->id,
+                    'date_cmd' => Carbon::now(),
+                    'statut' => 'en_attente',
+                    'montant_total' => $montantTotal,
+                    'sous_total' => $sousTotal,
+                    'frais_livraison' => $fraisLivraison,
+                    'adresse_livraison' => $data['adresse_livraison'],
+                    'id_wilaya' => (int) $data['id_wilaya'],
+                    'id_commune' => (int) $data['id_commune'],
+                    'notes' => $data['notes'] ?? null,
+                    'synced_pme' => 0,
                 ]);
-            }
 
-            return $cmd;
-        });
+                foreach ($lines as $l) {
+                    Cmd2::create([
+                        'id_cmd' => (int) $cmd->id,
+                        'id_produit' => (int) $l['id_produit'],
+                        'quantite' => (int) $l['quantite'],
+                        'prix_unitaire' => (float) $l['prix_unitaire'],
+                        'sous_total' => (float) $l['sous_total'],
+                    ]);
+                }
+
+                return $cmd;
+            });
+        } catch (QueryException $e) {
+            report($e);
+            return redirect()
+                ->to('/checkout')
+                ->withInput()
+                ->with('error', 'Erreur base de données. Lancez les migrations sur le serveur (php artisan migrate --force).');
+        } catch (\RuntimeException $e) {
+            report($e);
+            return redirect()
+                ->to('/checkout')
+                ->withInput()
+                ->with('error', $e->getMessage());
+        } catch (Throwable $e) {
+            report($e);
+            return redirect()
+                ->to('/checkout')
+                ->withInput()
+                ->with('error', 'Erreur serveur. Veuillez réessayer.');
+        }
 
         $contents = collect($summary['items'])->map(function ($it) {
             $p = $it['produit'];
