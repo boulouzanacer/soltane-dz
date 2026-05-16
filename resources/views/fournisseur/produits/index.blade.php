@@ -402,6 +402,33 @@
             return trimmed !== '' ? trimmed : 'COL_' + (idx + 1);
         }
 
+        function normalizeText(v) {
+            const s = (v === null || v === undefined) ? '' : String(v);
+            return s
+                .trim()
+                .toLowerCase()
+                .normalize('NFD')
+                .replace(/[\u0300-\u036f]/g, '')
+                .replace(/\s+/g, ' ');
+        }
+
+        function isStopRow(row) {
+            if (!row || !Array.isArray(row)) return false;
+            for (const cell of row) {
+                const t = normalizeText(cell);
+                if (t.includes('nombre de produit')) {
+                    return true;
+                }
+                if (t.includes('nombre des produit')) {
+                    return true;
+                }
+                if (t.includes('nombre produits')) {
+                    return true;
+                }
+            }
+            return false;
+        }
+
         function guess(columns, candidates) {
             const lower = columns.map(c => ({ raw: c, lc: String(c).toLowerCase() }));
             for (const cand of candidates) {
@@ -487,6 +514,7 @@
                     for (let i = 1; i < aoa.length; i++) {
                         const row = aoa[i];
                         if (!row || !Array.isArray(row)) continue;
+                        if (isStopRow(row)) break;
                         const obj = {};
                         for (let c = 0; c < headers.length; c++) {
                             obj[headers[c]] = row[c] ?? '';
