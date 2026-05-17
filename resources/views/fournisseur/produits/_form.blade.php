@@ -484,6 +484,21 @@
 <script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.3/Sortable.min.js"></script>
 <script>
     (function () {
+        const initialPrimaryKey = @json(
+            (function () use ($produit, $images) {
+                $old = trim((string) old('primary_image', ''));
+                if ($old !== '') return $old;
+                $current = trim((string) ($produit->image_principale ?? ''));
+                if ($current === '') return '';
+                foreach ($images as $img) {
+                    if (trim((string) $img->url_principale) === $current) {
+                        return 'existing:'.$img->id;
+                    }
+                }
+                return '';
+            })()
+        );
+
         const imagesInput = document.getElementById('imagesInput');
         const imageList = document.getElementById('imageList');
         const orderInputs = document.getElementById('orderInputs');
@@ -526,6 +541,8 @@
             const el = imageList.querySelector(`[data-key="${CSS.escape(key)}"]`);
             if (el) {
                 el.classList.add('ring-2', 'ring-[var(--frs-primary)]');
+                imageList.prepend(el);
+                rebuildOrderInputs();
             }
         }
 
@@ -615,7 +632,6 @@
             if (e.target && e.target.matches('form')) rebuildOrderInputs();
         });
 
-        const initialPrimary = '{{ old('primary_image') }}';
-        if (initialPrimary) window.__setPrimary(initialPrimary);
+        if (initialPrimaryKey) window.__setPrimary(initialPrimaryKey);
     })();
 </script>
