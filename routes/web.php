@@ -58,8 +58,9 @@ Route::prefix('fournisseur')->middleware('auth.fournisseur')->group(function () 
     Route::get('/produits', [FrsProduitController::class, 'index']);
     Route::get('/produits/create', [FrsProduitController::class, 'create']);
     Route::post('/produits', [FrsProduitController::class, 'store']);
-    Route::post('/produits/import', [FrsProduitController::class, 'import']);
     Route::get('/produits/{id}', [FrsProduitController::class, 'show'])->whereNumber('id');
+    Route::get('/produits/{id}/edit', [FrsProduitController::class, 'edit'])->whereNumber('id');
+    Route::put('/produits/{id}', [FrsProduitController::class, 'update'])->whereNumber('id');
 
     Route::get('/clients', [FrsClientController::class, 'index']);
     Route::get('/clients/{id}', [FrsClientController::class, 'show'])->whereNumber('id');
@@ -77,8 +78,7 @@ Route::prefix('fournisseur')->middleware('auth.fournisseur')->group(function () 
     Route::get('/wilayas/{idWilaya}/communes', [FrsProfileController::class, 'communes'])->whereNumber('idWilaya');
 
     Route::middleware('auth.admin')->group(function () {
-        Route::get('/produits/{id}/edit', [FrsProduitController::class, 'edit'])->whereNumber('id');
-        Route::put('/produits/{id}', [FrsProduitController::class, 'update'])->whereNumber('id');
+        Route::post('/produits/import', [FrsProduitController::class, 'import']);
         Route::delete('/produits/{id}', [FrsProduitController::class, 'destroy'])->whereNumber('id');
         Route::post('/produits/{id}/toggle-actif', [FrsProduitController::class, 'toggleActif'])->whereNumber('id');
 

@@ -3,7 +3,9 @@
 @section('content')
 @php
     $canCreate = in_array((string) session('role', ''), ['fournisseur', 'frs_user'], true);
-    $canManage = (string)session('role', '') === 'fournisseur' || (int)session('is_admin', 0) === 1;
+    $canImport = (string) session('role', '') === 'fournisseur' || (int) session('is_admin', 0) === 1;
+    $canEdit = in_array((string) session('role', ''), ['fournisseur', 'frs_user'], true);
+    $canManage = (string) session('role', '') === 'fournisseur' || (int) session('is_admin', 0) === 1;
     $returnUrl = request()->fullUrl();
 @endphp
 <div class="space-y-4" x-data="productImport()">
@@ -47,25 +49,29 @@
             </div>
         </form>
 
-        @if($canCreate)
+        @if($canCreate || $canImport)
             <div class="flex items-center gap-2 justify-end">
                 <input type="file"
                        class="hidden"
                        id="importFileInput"
                        accept=".xlsx,.xls,.csv"
                        @change="handleFileChange($event)">
-                <button type="button"
-                        class="inline-flex items-center justify-center gap-2 rounded-2xl px-4 py-3 font-bold border border-white/10 hover:bg-white/10"
-                        @click="openImport()">
-                    <i class="fa-solid fa-file-import"></i>
-                    Importer produits
-                </button>
-                <a href="{{ url('/fournisseur/produits/create') }}"
-                   class="inline-flex items-center justify-center gap-2 rounded-2xl px-4 py-3 font-bold text-white"
-                   style="background: linear-gradient(135deg, var(--frs-primary), #0A3D7A);">
-                    <i class="fa-solid fa-plus"></i>
-                    Nouveau produit
-                </a>
+                @if($canImport)
+                    <button type="button"
+                            class="inline-flex items-center justify-center gap-2 rounded-2xl px-4 py-3 font-bold border border-white/10 hover:bg-white/10"
+                            @click="openImport()">
+                        <i class="fa-solid fa-file-import"></i>
+                        Importer produits
+                    </button>
+                @endif
+                @if($canCreate)
+                    <a href="{{ url('/fournisseur/produits/create') }}"
+                       class="inline-flex items-center justify-center gap-2 rounded-2xl px-4 py-3 font-bold text-white"
+                       style="background: linear-gradient(135deg, var(--frs-primary), #0A3D7A);">
+                        <i class="fa-solid fa-plus"></i>
+                        Nouveau produit
+                    </a>
+                @endif
             </div>
         @endif
     </div>
@@ -122,7 +128,10 @@
                             <td class="py-3 px-4 text-white/80 font-semibold">{{ $p->reference }}</td>
                             <td class="py-3 px-4 text-white/80">{{ $p->categorie ?: '—' }}</td>
                             <td class="py-3 px-4 text-right">
-                                <span class="text-xs font-bold px-2.5 py-1 rounded-full {{ $stockBadge[1] }}">{{ $stock }} • {{ $stockBadge[0] }}</span>
+                                <div class="flex flex-col items-end gap-1">
+                                    <div class="font-extrabold tabular-nums">{{ $stock }}</div>
+                                    <span class="text-[11px] font-bold px-2.5 py-1 rounded-full {{ $stockBadge[1] }}">{{ $stockBadge[0] }}</span>
+                                </div>
                             </td>
                             <td class="py-3 px-4 text-right font-extrabold">{{ number_format((float)$p->pv_1, 2, '.', ' ') }}</td>
                             <td class="py-3 px-4 text-center">
@@ -136,27 +145,29 @@
                                        class="rounded-xl px-3 py-2 text-xs font-extrabold border border-white/10 hover:bg-white/10">
                                         Détail
                                     </a>
-                                    @if($canManage)
+                                    @if($canEdit)
                                         <a href="{{ url('/fournisseur/produits/'.$p->id.'/edit').'?'.http_build_query(['return' => $returnUrl]) }}"
                                            class="rounded-xl px-3 py-2 text-xs font-extrabold border border-white/10 hover:bg-white/10">
                                             Modifier
                                         </a>
-                                        <form method="POST" action="{{ url('/fournisseur/produits/'.$p->id.'/toggle-actif') }}">
-                                            @csrf
-                                            <button type="submit"
-                                                    class="rounded-xl px-3 py-2 text-xs font-extrabold border border-white/10 hover:bg-white/10">
-                                                {{ $actif ? 'Désactiver' : 'Activer' }}
-                                            </button>
-                                        </form>
-                                        <form method="POST" action="{{ url('/fournisseur/produits/'.$p->id) }}"
-                                              onsubmit="return confirm('Supprimer ce produit ?')">
-                                            @csrf
-                                            @method('DELETE')
-                                            <button type="submit"
-                                                    class="rounded-xl px-3 py-2 text-xs font-extrabold border border-red-400/20 bg-red-500/10 text-red-200 hover:bg-red-500/15">
-                                                Supprimer
-                                            </button>
-                                        </form>
+                                        @if($canManage)
+                                            <form method="POST" action="{{ url('/fournisseur/produits/'.$p->id.'/toggle-actif') }}">
+                                                @csrf
+                                                <button type="submit"
+                                                        class="rounded-xl px-3 py-2 text-xs font-extrabold border border-white/10 hover:bg-white/10">
+                                                    {{ $actif ? 'Désactiver' : 'Activer' }}
+                                                </button>
+                                            </form>
+                                            <form method="POST" action="{{ url('/fournisseur/produits/'.$p->id) }}"
+                                                  onsubmit="return confirm('Supprimer ce produit ?')">
+                                                @csrf
+                                                @method('DELETE')
+                                                <button type="submit"
+                                                        class="rounded-xl px-3 py-2 text-xs font-extrabold border border-red-400/20 bg-red-500/10 text-red-200 hover:bg-red-500/15">
+                                                    Supprimer
+                                                </button>
+                                            </form>
+                                        @endif
                                     @endif
                                 </div>
                             </td>
