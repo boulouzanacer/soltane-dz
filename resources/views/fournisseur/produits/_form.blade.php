@@ -129,7 +129,6 @@
                        x-model="actif">
                 <span class="text-sm font-semibold text-white/70">Actif</span>
             </label>
-            <div class="text-xs text-white/50">Max 5 images • WebP généré automatiquement</div>
         </div>
 
         <div class="mt-3"
@@ -441,7 +440,7 @@
     <div class="flex items-center justify-between">
         <div class="font-extrabold tracking-wide">Images</div>
         <div class="text-right">
-            <div class="text-xs text-white/50">Glisser-déposer pour l’ordre • ⭐ pour image principale</div>
+            <div class="text-xs text-white/50">Max 5 images • WebP généré automatiquement • Glisser-déposer pour l’ordre • ⭐ pour image principale</div>
         </div>
     </div>
 
